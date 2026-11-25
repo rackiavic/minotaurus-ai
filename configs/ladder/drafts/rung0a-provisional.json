@@ -35,16 +35,16 @@
   "parallel": 8,
   "dqn": {
     "hidden_layers": [
-      64,
-      64
+      128,
+      128
     ],
     "learning_rate": 0.001,
     "batch_size": 64,
     "gamma": 0.98,
-    "replay_size": 20000,
+    "replay_size": 50000,
     "target_update": 200,
     "epsilon_start": 1.0,
     "epsilon_end": 0.05,
-    "epsilon_decay": 0.99
+    "epsilon_decay": 0.997
   }
 }

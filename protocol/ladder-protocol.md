@@ -27,7 +27,7 @@ new protocol file with a new name, and results under the old one stay labelled w
 
 | Track | Allowed | Rungs (each adds one step to the one before) |
 |---|---|---|
-| **Strict** | documented settings, **built-in game rewards only** (+1 / −0.01 / −0.05), no teacher | Rung 0 → S1 `wall_mask` → S2 `border_exit` → S3 `policy_epsilon` 0.1 + `patience` 8 |
+| **Strict** | documented settings, **built-in game rewards only** (+1 / −0.01 / −0.05), no teacher | Rung 0 → S1 `wall_mask` → S2 `border_exit` → then two siblings, each adding one change to S2: S3a `policy_epsilon` 0.1, S3b `patience` 40 |
 | **Full-documented** | every documented option **except `dqn.imitation`** | Rung 0 → F1 `dqn.shaping` (potential-based) only → F2 + `novelty_bonus` 0.02 + `revisit_penalty` 0.01 → F3 + `observation.version` 2 → F4 + `loop_stop` {3, 0.5} + `loop_escape` |
 | reference | B-mixed-s1 (Full-documented recipe; `configs/ladder/drafts/full-ref.json`, retrained on 8 paired seeds) | none; reference only |
 
@@ -36,7 +36,7 @@ appears in no config of any track.
 
 ## Pilot (pre-registered; it decides the Rung 0 recipe and nothing else)
 
-- 4 runs at once, 4,000 episodes. Same sizes, pools and `maze_seed` (93,000,001) as Rung 0.
+- 6 runs at once (arms A, B, C × seeds 1, 2), 4,000 episodes. Same sizes, pools and `maze_seed` (93,000,001) as Rung 0.
   `eval_every` at its default (250), so best-on-validation applies and test is never used.
 - Arms: 2 seeds (1, 2) of `data/examples/dqn-brain.json` as-is (`pilot/pilot-dqn-brain.json`),
   and 2 seeds (1, 2) of **r3** (`pilot/pilot-r3.json`). r3 copies only the network and learning
@@ -46,10 +46,20 @@ appears in no config of any track.
 - **Caveat:** r3's documented no-collapse result (TRAINING.md L156–161) is for sizes 9–13 **with
   shaping, wall_mask and novelty on**. It is the best documented starting point, not a proven
   recipe with built-in rewards only.
-- Decision: the arm with the higher mean **check (validation) score** becomes the Rung 0 recipe.
+- **Arm C (Full-documented; does NOT compete for the Rung 0 recipe):** r3 + `dqn.shaping` true
+  only (`pilot/pilot-r3-shaping.json`, the F1 change on r3), seeds 1, 2, with the same episodes,
+  sizes, pools, `maze_seed` and `eval_every`. It has no novelty, revisit, wall_mask or patience.
+  It is reported beside A and B and is never part of the Rung 0 decision.
+- Decision (arms A and B only): the arm with the higher mean **check (validation) score** becomes the Rung 0 recipe.
   An arm whose seeds both stay under 5% on check, or both carry the collapse warning, cannot win.
   If the arms are within 3 points, the simpler arm (`dqn-brain.json`) wins. arena-check-2 and size
   bands are reported but do not decide; test and hand-made levels are never looked at for this.
+- **Fallback (pre-registered):** if both A and B score under 5% on validation (both seeds of
+  each arm), then: Rung 0 = r3 (owner decision); the report states **"Strict baseline does not
+  learn at 4,000 episodes"**; Full-documented F1 becomes the first rung expected to learn; and the
+  Strict rungs S1, S2, S3a and S3b run only as **2-seed, 4,000-episode screens** (seeds 1, 2, same
+  pools), not as full 8-seed, 15,000-episode rungs. A screen cannot "keep" a rung under the
+  decision rule; it only shows whether anything starts to learn.
 - No pilot result moves into any rung's statistics.
 
 ## Budgets

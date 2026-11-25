@@ -46,22 +46,27 @@ def main():
     write(OUT / "pilot" / "pilot-dqn-brain.json", pilot_a)
     for cand in ("r3",):  # owner chose r3 on 2026-11-25
         write(OUT / "pilot" / f"pilot-{cand}.json", base(f"pilot-{cand}", cand, 4000, [1, 2]))
+    # Arm C (Full-documented, does not compete for Rung 0): r3 + dqn.shaping only (= F1 on r3)
+    pilot_c = base("pilot-r3-shaping", "r3", 4000, [1, 2]); pilot_c["dqn"]["shaping"] = True
+    write(OUT / "pilot" / "pilot-r3-shaping.json", pilot_c)
 
     seeds = list(range(1, 9))
     tag = "" if (OUT / "pilot" / "DECIDED").exists() else "-provisional"
     d = OUT / ("" if not tag else "drafts")
     r0a = base("rung0a", key, 4000, seeds); write(d / f"rung0a{tag}.json", r0a)
     r0 = base("rung0b", key, 15000, seeds); write(d / f"rung0b{tag}.json", r0)
-    # Strict: S1 wall_mask -> S2 border_exit -> S3 policy_epsilon + patience
+    # Strict: S1 wall_mask -> S2 border_exit -> S3a policy_epsilon 0.1 | S3b patience 40
+    # (S3a and S3b each add one change to S2; they are siblings, not chained)
     s1 = copy.deepcopy(r0); s1["name"] = "S1"; s1["wall_mask"] = True
     s2 = copy.deepcopy(s1); s2["name"] = "S2"; s2["levels"]["generated"]["border_exit"] = True
-    s3 = copy.deepcopy(s2); s3["name"] = "S3"; s3["policy_epsilon"] = 0.1; s3["patience"] = 8
+    s3a = copy.deepcopy(s2); s3a["name"] = "S3a"; s3a["policy_epsilon"] = 0.1
+    s3b = copy.deepcopy(s2); s3b["name"] = "S3b"; s3b["patience"] = 40
     # Full-documented: F1 shaping -> F2 novelty+revisit -> F3 obs v2 -> F4 loop_stop+loop_escape
     f1 = copy.deepcopy(r0); f1["name"] = "F1"; f1["dqn"]["shaping"] = True
     f2 = copy.deepcopy(f1); f2["name"] = "F2"; f2["dqn"].update(novelty_bonus=0.02, revisit_penalty=0.01)
     f3 = copy.deepcopy(f2); f3["name"] = "F3"; f3["observation"] = {"version": 2}
     f4 = copy.deepcopy(f3); f4["name"] = "F4"; f4["loop_stop"] = {"repeats": 3, "penalty": 0.5}; f4["loop_escape"] = True
-    for c in (s1, s2, s3, f1, f2, f3, f4):
+    for c in (s1, s2, s3a, s3b, f1, f2, f3, f4):
         write(OUT / "drafts" / f"{c['name']}{tag}.json", c)
     # reference: B-mixed-s1 recipe verbatim, paired pools and seeds
     ref = json.loads(Path("/home/rkhrk/minotaur-research/2026-11-25-head-to-head/release/B-mixed-s1-config.json").read_text())
