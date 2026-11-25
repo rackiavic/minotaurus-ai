@@ -1,5 +1,5 @@
 {
-  "name": "S3a",
+  "name": "R0-4k",
   "method": "dqn",
   "levels": {
     "generated": {
@@ -17,11 +17,10 @@
       "maze_seed": 93000001,
       "train": 800,
       "validation": 160,
-      "test": 160,
-      "border_exit": true
+      "test": 160
     }
   },
-  "episodes": 15000,
+  "episodes": 4000,
   "seed": 1,
   "seeds": [
     1,
@@ -47,7 +46,5 @@
     "epsilon_start": 1.0,
     "epsilon_end": 0.05,
     "epsilon_decay": 0.997
-  },
-  "wall_mask": true,
-  "policy_epsilon": 0.1
+  }
 }

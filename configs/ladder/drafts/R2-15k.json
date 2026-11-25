@@ -1,5 +1,5 @@
 {
-  "name": "F4",
+  "name": "R2-15k",
   "method": "dqn",
   "levels": {
     "generated": {
@@ -46,16 +46,7 @@
     "epsilon_start": 1.0,
     "epsilon_end": 0.05,
     "epsilon_decay": 0.997,
-    "shaping": true,
-    "novelty_bonus": 0.02,
-    "revisit_penalty": 0.01
+    "shaping": true
   },
-  "observation": {
-    "version": 2
-  },
-  "loop_stop": {
-    "repeats": 3,
-    "penalty": 0.5
-  },
-  "loop_escape": true
+  "wall_mask": true
 }
