@@ -74,6 +74,21 @@ Every config records `sizes` exactly. Both tracks use [11,13,15,17,21,25,31,41]:
 sizes, which span the evaluated range, inside the schema's limit of 5–41. The compliant baseline
 can configure them, so there is no size limitation to report.
 
+## Bundles, signing and server checks (added 2026-11-25, before any run)
+
+- Every seed's `bundle.tar` is checked by `scripts/verify_bundles.py` (run by `launch.sh`). The
+  server's own `read_bundle()` checks must pass. sha256 of the `brain.onnx` inside the tar must
+  equal the manifest `brain_id`, the manifest file entry, the seed's `brain.onnx` on disk, and the
+  sha256 recorded by `eval_brain.py`. The bundle sha256 is written into the run manifest. Any
+  mismatch means that seed is not reported until it is explained.
+- Pilot and rung runs are **unsigned**. `launch.sh` sets `MINOTAURUS_SIGNING_KEY` to a path that
+  never exists, and `--expect-unsigned` fails on any `signature.json`. `keygen` and `sign` are not
+  run without the owner's approval. If approved, the private key lives in `D:\Minotaur\secrets\`
+  only: outside every git worktree, gitignored, never pushed, never printed in reports or logs.
+  Only the final chosen brain is signed.
+- The server's "Verified" replay and the UI Compare / Brains / Random maze pages are for **final
+  confirmation and visual inspection only**. They are never used to select a recipe, rung or seed.
+
 ## Manifest (written by `scripts/launch.sh` in `runs/<name>/manifest.json`)
 
 Pinned SHA, TRAINING.md hash, config hash, seeds, maze_seed, sizes, uv.lock hash, hardware,

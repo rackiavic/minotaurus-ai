@@ -33,6 +33,10 @@ json.dump({
 EOF
 
 cd "$WT"
+# Runs stay UNSIGNED: point the key at a path that never exists, so `train` cannot pick up a key
+# from ~/.config/minotaurus or D:\Minotaur\secrets even if one is made later.
+export MINOTAURUS_SIGNING_KEY=$P/secrets/.no-key-runs-stay-unsigned
+[[ ! -e $MINOTAURUS_SIGNING_KEY ]] || { echo "unsigned-guard path exists: refusing"; exit 3; }
 set +e
 /usr/bin/time -v uv run --frozen minotaurus train --config "$CFG" --runs-dir "$RUN" > "$P/logs/train-$NAME.log" 2> "$P/logs/time-$NAME.log"
 RC=$?
@@ -43,5 +47,9 @@ m, rc = sys.argv[1], int(sys.argv[2]); d = json.load(open(m))
 d["end"] = datetime.datetime.now().astimezone().isoformat(); d["exit_code"] = rc
 json.dump(d, open(m, "w"), indent=2)
 EOF
+if [[ $RC == 0 ]]; then
+  "$WT/.venv/bin/python" -I "$P/scripts/verify_bundles.py" "$RUN" --expect-unsigned \
+    > "$P/logs/bundles-$NAME.md" 2>&1 || echo "BUNDLE CHECK FAILED: see logs/bundles-$NAME.md"
+fi
 "$P/scripts/drift_check.sh" --log || true
 echo "$NAME finished rc=$RC"

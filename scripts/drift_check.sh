@@ -19,6 +19,11 @@ WATCH=(
   minotaurus/cli/train.py
   minotaurus/cli/check_brain.py
   minotaurus/verify.py
+  minotaurus/bundle.py
+  minotaurus/signing.py
+  minotaurus/cli/pack.py
+  minotaurus/cli/sign.py
+  minotaurus/cli/keygen.py
   data/examples/
   data/levels/
   data/schemas/
