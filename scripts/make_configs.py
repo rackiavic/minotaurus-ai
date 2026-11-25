@@ -8,7 +8,7 @@ One track, "Documented" (owner decision 2026-11-25). Cumulative ladder, one chan
   R6 patience 40     R7 observation.version 2             R8 loop_stop+loop_escape (NON-potential-based)
 Each rung Rk is applied to the last KEPT config before it. `--dropped` lists rungs the decision
 rule dropped; until results exist, every rung is assumed kept and files are written as drafts.
-Screening configs use 4,000 episodes x 8 seeds; finalists use 15,000 (`--episodes 15000`).
+Screening configs use 4,000 episodes x 6 seeds (1-6); finalists use 15,000 x 8 seeds (`--episodes 15000`).
 
 Pilot configs (arms A, B, C) are always written to configs/ladder/pilot/.
 Recipes come from data/examples/ in the PINNED worktree; only the network/learning block is taken.
@@ -71,7 +71,8 @@ def main():
     pc = base("pilot-r3-shaping", "r3", 4000, [1, 2]); pc["dqn"]["shaping"] = True
     write(OUT / "pilot" / "pilot-r3-shaping.json", pc)
 
-    seeds = list(range(1, 9)); ep = a.episodes; tag = f"-{ep // 1000}k"
+    ep = a.episodes; tag = f"-{ep // 1000}k"
+    seeds = list(range(1, 7)) if ep == 4000 else list(range(1, 9))  # screening 6, finalists 8
     kept = base(f"R0{tag}", "r3", ep, seeds)
     write(OUT / "drafts" / f"R0{tag}.json", kept)
     for name, change in RUNGS:
@@ -84,7 +85,7 @@ def main():
     ref = json.loads(Path("/home/rkhrk/minotaur-research/2026-11-25-head-to-head/release/B-mixed-s1-config.json").read_text())
     for k in ("train_step_limit_factor", "stages"):
         ref.pop(k, None)
-    ref.update(name="ref-b-mixed", seeds=seeds, parallel=8)
+    ref.update(name="ref-b-mixed", seeds=list(range(1, 9)), parallel=8)
     ref["levels"]["generated"] = dict(copy.deepcopy(POOLS), border_exit=True)
     write(OUT / "drafts" / "ref-b-mixed.json", ref)
 
