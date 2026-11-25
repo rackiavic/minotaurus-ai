@@ -15,8 +15,8 @@ new protocol file with a new name, and results under the old one stay labelled w
 1. Brains learn on their own: no behaviour cloning, demonstrations, copied routes or hand-written
    solver. **`dqn.imitation` is excluded from both tracks**, even though TRAINING.md documents it:
    its teacher is a shortest-way solver.
-2. Compliant track: only settings documented in the pinned TRAINING.md, built-in rewards only.
-   Anything else is stopped and becomes a PR proposal, with no workaround.
+2. Both tracks: only settings documented in the pinned TRAINING.md (Strict: built-in rewards
+   only). Anything else is stopped and becomes a PR proposal, with no workaround.
 3. Never choose anything using test mazes, hand-made levels or arena levels. This covers
    `scores.json` test, `fixed_levels.json`, `data/levels/test-mazes/` and the final-test set. These
    columns are reported but never compared for a decision.
@@ -25,14 +25,30 @@ new protocol file with a new name, and results under the old one stay labelled w
 
 ## Tracks (reported side by side; neither replaces the other)
 
-| Track | Contents | Improvement rule |
+| Track | Allowed | Rungs (each adds one step to the one before) |
 |---|---|---|
-| Compliant | Rung 0 and the kept rungs; documented settings only | applies within the track, from Rung 0 |
-| Research | B-mixed-s1 reference recipe (`configs/ladder/drafts/research-ref.json`); any extra is labelled | reference only |
+| **Strict** | documented settings, **built-in game rewards only** (+1 / −0.01 / −0.05), no teacher | Rung 0 → S1 `wall_mask` → S2 `border_exit` → S3 `policy_epsilon` 0.1 + `patience` 8 |
+| **Full-documented** | every documented option **except `dqn.imitation`** | Rung 0 → F1 `dqn.shaping` (potential-based) only → F2 + `novelty_bonus` 0.02 + `revisit_penalty` 0.01 → F3 + `observation.version` 2 → F4 + `loop_stop` {3, 0.5} + `loop_escape` |
+| reference | B-mixed-s1 (Full-documented recipe; `configs/ladder/drafts/full-ref.json`, retrained on 8 paired seeds) | none; reference only |
+
+The improvement rule applies within a track, starting from the shared Rung 0. `dqn.imitation`
+appears in no config of any track.
+
+## Pilot (pre-registered; it decides the Rung 0 recipe and nothing else)
+
+- 4 runs at once, 4,000 episodes. Same sizes, pools and `maze_seed` (93,000,001) as Rung 0.
+  `eval_every` at its default (250), so best-on-validation applies and test is never used.
+- Arms: 2 seeds (1, 2) of `data/examples/dqn-brain.json` as-is, and 2 seeds (1, 2) of the
+  owner-approved documented recipe.
+- Decision: the arm with the higher mean **check (validation) score** becomes the Rung 0 recipe.
+  An arm whose seeds both stay under 5% on check, or both carry the collapse warning, cannot win.
+  If the arms are within 3 points, the simpler arm (`dqn-brain.json`) wins. arena-check-2 and size
+  bands are reported but do not decide; test and hand-made levels are never looked at for this.
+- No pilot result moves into any rung's statistics.
 
 ## Budgets
 
-Rung 0a: 4,000 episodes. Rung 0b and later rungs: 15,000. Research reference: 15,000.
+Pilot: 4,000. Rung 0a: 4,000 episodes. Rung 0b and all S/F rungs: 15,000. Reference: 15,000.
 
 ## Seeds and pairing
 
@@ -64,9 +80,9 @@ more than 10 points.
 
 ## Checkpoints
 
-Rung 0 reports the final `brain.onnx` only (`eval_every: 0`, so no checkpoint picking). From Rung 1
-on, the only selection is TRAINING.md's automated rule: best on validation every `eval_every`
-tries. Nothing is picked by hand.
+Every run, Rung 0 included, uses TRAINING.md's automated rule: `eval_every` at its default (250),
+and each seed's `brain.onnx` is the best on validation. Test and hand-made levels never take part.
+Nothing is picked by hand. `best-brain.onnx` (the best seed) is never used for a decision.
 
 ## Sizes
 

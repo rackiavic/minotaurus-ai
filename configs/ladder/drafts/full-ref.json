@@ -1,5 +1,5 @@
 {
-  "name": "rung1",
+  "name": "full-ref",
   "method": "dqn",
   "levels": {
     "generated": {
@@ -17,25 +17,34 @@
       "maze_seed": 93000001,
       "train": 800,
       "validation": 160,
-      "test": 160
+      "test": 160,
+      "border_exit": true
     }
   },
   "episodes": 15000,
   "seed": 1,
   "dqn": {
     "hidden_layers": [
-      64,
-      64
+      128,
+      128
     ],
     "learning_rate": 0.001,
     "batch_size": 64,
     "gamma": 0.98,
-    "replay_size": 20000,
+    "replay_size": 50000,
     "target_update": 200,
     "epsilon_start": 1.0,
     "epsilon_end": 0.05,
-    "epsilon_decay": 0.99
+    "epsilon_decay": 0.997,
+    "shaping": true,
+    "novelty_bonus": 0.02,
+    "revisit_penalty": 0.01,
+    "shaping_on_bump": true
   },
+  "eval_every": 250,
+  "wall_mask": true,
+  "patience": 40,
+  "policy_epsilon": 0.0,
   "seeds": [
     1,
     2,
@@ -46,6 +55,5 @@
     7,
     8
   ],
-  "parallel": 8,
-  "eval_every": 250
+  "parallel": 8
 }

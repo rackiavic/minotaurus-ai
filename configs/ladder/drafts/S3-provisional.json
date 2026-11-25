@@ -1,5 +1,5 @@
 {
-  "name": "rung2",
+  "name": "S3",
   "method": "dqn",
   "levels": {
     "generated": {
@@ -17,11 +17,23 @@
       "maze_seed": 93000001,
       "train": 800,
       "validation": 160,
-      "test": 160
+      "test": 160,
+      "border_exit": true
     }
   },
   "episodes": 15000,
   "seed": 1,
+  "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "parallel": 8,
   "dqn": {
     "hidden_layers": [
       64,
@@ -36,17 +48,7 @@
     "epsilon_end": 0.05,
     "epsilon_decay": 0.99
   },
-  "seeds": [
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8
-  ],
-  "parallel": 8,
-  "eval_every": 250,
-  "wall_mask": true
+  "wall_mask": true,
+  "policy_epsilon": 0.1,
+  "patience": 8
 }
