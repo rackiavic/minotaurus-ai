@@ -38,8 +38,14 @@ appears in no config of any track.
 
 - 4 runs at once, 4,000 episodes. Same sizes, pools and `maze_seed` (93,000,001) as Rung 0.
   `eval_every` at its default (250), so best-on-validation applies and test is never used.
-- Arms: 2 seeds (1, 2) of `data/examples/dqn-brain.json` as-is, and 2 seeds (1, 2) of the
-  owner-approved documented recipe.
+- Arms: 2 seeds (1, 2) of `data/examples/dqn-brain.json` as-is (`pilot/pilot-dqn-brain.json`),
+  and 2 seeds (1, 2) of **r3** (`pilot/pilot-r3.json`). r3 copies only the network and learning
+  settings of `data/examples/dqn-mixed-learning-brain.json`: hidden_layers [128,128], lr 0.001,
+  batch 64, gamma 0.98, replay 50000, target_update 200, epsilon 1.0 → 0.05, decay 0.997. It has
+  no shaping, novelty, revisit, wall_mask or patience. (Chosen by the owner, 2026-11-25.)
+- **Caveat:** r3's documented no-collapse result (TRAINING.md L156–161) is for sizes 9–13 **with
+  shaping, wall_mask and novelty on**. It is the best documented starting point, not a proven
+  recipe with built-in rewards only.
 - Decision: the arm with the higher mean **check (validation) score** becomes the Rung 0 recipe.
   An arm whose seeds both stay under 5% on check, or both carry the collapse warning, cannot win.
   If the arms are within 3 points, the simpler arm (`dqn-brain.json`) wins. arena-check-2 and size

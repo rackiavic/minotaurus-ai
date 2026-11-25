@@ -44,7 +44,7 @@ def main():
     pilot_a = base("pilot-dqn-brain", "dqn-brain", 4000, [1, 2])
     pilot_a["dqn"] = json.loads((EX / "dqn-brain.json").read_text())["dqn"]
     write(OUT / "pilot" / "pilot-dqn-brain.json", pilot_a)
-    for cand in ("r3", "wide-stable"):
+    for cand in ("r3",):  # owner chose r3 on 2026-11-25
         write(OUT / "pilot" / f"pilot-{cand}.json", base(f"pilot-{cand}", cand, 4000, [1, 2]))
 
     seeds = list(range(1, 9))
