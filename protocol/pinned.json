@@ -1,0 +1,11 @@
+{
+  "pinned_sha": "dc888a7324025923455bf483f7100212bf077bca",
+  "pinned_subject": "chore: delete the fake arena (web/mock, dev --mock); update backlog and board",
+  "upstream": "https://github.com/nokri-mohammed/minotaurus-ai.git",
+  "training_md_sha256": "48c140f98e3c68176c9e617885ee0b1000da0f211a9d20b4c126abf264c5bda0",
+  "uv_lock_sha256": "0ca959931d7d50c3fcc7df878833e85f80522ecd86e0d2b7f15be0101f9f3491",
+  "pyproject_sha256": "c67e6515d806cb04ae20d984b90444fc3b4261da3f8e0d88202e97d50340d4d0",
+  "baseline_reference_sha": "19f8696",
+  "pinned_at": "2026-11-25T18:12:39+00:00",
+  "worktree": "/mnt/d/Minotaur/worktrees/fresh"
+}
