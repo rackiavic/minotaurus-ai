@@ -22,6 +22,7 @@ for sd in $(find "$P/runs/$R" -type d -name 'seed-*' | sort -t- -k2 -n); do
 done
 (( n_seeds == ${RUNG_SEEDS:-6} )) || alert "$R: expected ${RUNG_SEEDS:-6} seed folders, found $n_seeds"
 "$PY" -I "$P/scripts/verify_bundles.py" "$P/runs/$R" --expect-unsigned > "$P/logs/bundles-$R.md" 2>&1 || alert "verify_bundles.py failed on $R" "$P/logs/bundles-$R.md"
+"$PY" -I "$P/scripts/check_inputs.py" "$P/runs/$R" > "$P/logs/inputs-$R.md" 2>&1 || alert "brain input size does not match the config on $R" "$P/logs/inputs-$R.md"
 python3 "$P/scripts/rung_table.py" "$R" --seeds ${RUNG_SEEDS:-6} --compare "$KEPT" > "$P/logs/$R-table.out" 2>&1 || alert "$R table cannot be produced" "$P/logs/$R-table.out"
 "$P/scripts/drift_check.sh" --log || echo "$(date -Iseconds) drift CHANGED-RELEVANT after $R (see logs/drift.log)" >> "$P/logs/ALERT.txt"
 echo "== $R table written $(date -Iseconds); no later rung started"
