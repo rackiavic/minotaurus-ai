@@ -7,12 +7,15 @@ Owner restructure 2026-11-26 (pilot closed, before any ladder result):
        revisit 0.01 + border_exit + patience 40; NARROW pool sizes [11,13,15,17], size 11,
        400/80/80, maze_seed 93,000,001; 15,000 tries; eval_every 250; 6 paired seeds (1-6).
        Gate: R0 mean arena-check-2 band 11-17 < 60% -> stop and report.
-  Forward rungs, one change each, applied to the last KEPT config (R0 first):
+  R0 ran 2026-11-26 (gate passed, band 11-17 76.7%). Owner re-order after R0, before any rung:
+  forward rungs, one change each, applied to the last KEPT config (R0 first), in this order:
+       S1 learning_rate 0.0003 + target_update 1000 (TRAINING.md L163-167)
+       S2 train_step_limit_factor 2
        F1 observation.version 2      F2 loop_stop + loop_escape (NON-potential-based)
-       F3 policy_epsilon 0.1         F5 train_step_limit_factor 2
-       F4 wider training pool, sizes [11..21] (B-mixed-25 risk), run LAST (order F1 F2 F3 F5 F4)
+       F3 policy_epsilon 0.1         F4 wider training pool, sizes [11..21] (B-mixed-25 risk), LAST
+  Every rung is decided on arena-check-2 OVERALL (11-41), n = 6.
   `--dropped` lists rungs the decision rule dropped; until results exist every rung is assumed
-  kept, so F2-F4 and the chain confirmation are drafts.
+  kept, so S2-F4 and the chain confirmation are drafts.
   Confirmation (finalists): R0 and the kept chain's final config, NARROW pool, 15,000 tries,
   8 FRESH paired seeds (7-14, never used in screening), parallel 3 each (both configs together = 6 processes); decided on
   arena-check-2 OVERALL. No config trains on the wide 11-41 pool.
@@ -45,13 +48,14 @@ def r0():
             "seed": 1, "seeds": SCREEN_SEEDS, "parallel": len(SCREEN_SEEDS), "dqn": dqn}
 
 
+def s1(c): c["dqn"].update(learning_rate=0.0003, target_update=1000)
+def s2(c): c["train_step_limit_factor"] = 2
 def f1(c): c["observation"] = {"version": 2}
 def f2(c): c["loop_stop"] = {"repeats": 3, "penalty": 0.5}; c["loop_escape"] = True
 def f3(c): c["policy_epsilon"] = 0.1
 def f4(c): c["levels"]["generated"].update(copy.deepcopy(WIDER))
-def f5(c): c["train_step_limit_factor"] = 2
 
-RUNGS = [("F1", f1), ("F2", f2), ("F3", f3), ("F5", f5), ("F4", f4)]  # owner 2026-11-26: F4 (wider pool) runs LAST
+RUNGS = [("S1", s1), ("S2", s2), ("F1", f1), ("F2", f2), ("F3", f3), ("F4", f4)]  # owner 2026-11-26 after R0; F4 LAST
 
 
 def write(name, cfg):

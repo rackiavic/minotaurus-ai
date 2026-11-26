@@ -1,6 +1,6 @@
 """Per-seed table for one ladder run, plus the R0 gate. Exit 1 if anything needed is missing.
 
-  python3 rung_table.py NAME [--seeds 6] [--gate]   -> reports/NAME-table.md, logs/NAME-table.json
+  python3 rung_table.py NAME [--seeds 6] [--gate] [--compare KEPT]   -> reports/NAME-table.md, logs/NAME-table.json
 
 Per seed: check (scores.json "validation") and practice ("train") of the saved brain, the gap,
 kept try (exported_episode), last try reached (below the episode budget = stopped by patience),
@@ -10,6 +10,10 @@ match (manifest "bundles" from verify_bundles.py), arena-check-2 overall and ban
 BLINDED: scores.json "test" and test_stats.json are never read (test_stats.json: existence only).
 --gate (R0, protocol 2026-11-26): mean of arena-check-2 band 11-17 over the seeds < 60% -> GATE
 FAILED, stop and report. Either way no later rung is started by this script.
+--compare KEPT (protocol 2026-11-26 after R0): the pre-registered decision on arena-check-2 OVERALL,
+paired by seed against logs/KEPT-table.json: d_i = new_i - kept_i, SE = sd(d)/sqrt(n); KEEP only if
+mean(d) >= 2*SE and mean(d) >= 3 points, else DROP. Flag any seed that falls by more than 10 points.
+Bands, kept try, last try and the collapse count are reported beside it, never deciding.
 """
 import argparse, json, os, statistics as st, sys
 from pathlib import Path
@@ -27,7 +31,7 @@ def need(cond, msg):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("name"); ap.add_argument("--seeds", type=int, default=6); ap.add_argument("--gate", action="store_true")
+    ap.add_argument("name"); ap.add_argument("--seeds", type=int, default=6); ap.add_argument("--gate", action="store_true"); ap.add_argument("--compare")
     a = ap.parse_args()
     run = P / "runs" / a.name
     man = json.loads((run / "manifest.json").read_text())
@@ -91,8 +95,34 @@ def main():
         L += ["", f"**Gate (pre-registered): mean arena-check-2 band 11-17 = {pct(m)}% "
                   f"{'>=' if m >= GATE else '<'} 60% -> {'PASSED' if m >= GATE else 'FAILED: stop and report; no forward rung runs'}.**",
               "No later rung is started automatically (owner, 2026-11-26)."]
+    decision = None
+    if a.compare:
+        kept = {r["seed"]: r for r in json.loads((P / "logs" / f"{a.compare}-table.json").read_text())["rows"]}
+        new = {r["seed"]: r for r in rows}
+        if set(kept) != set(new):
+            print(f"seeds differ from {a.compare}: {sorted(kept)} vs {sorted(new)}"); sys.exit(1)
+        sd_ = sorted(new)
+        d = [100 * (new[i]["ac2"] - kept[i]["ac2"]) for i in sd_]
+        md = st.mean(d); se = st.stdev(d) / len(d) ** 0.5
+        keep = md >= 2 * se and md >= 3
+        drops = [(i, x) for i, x in zip(sd_, d) if x < -10]
+        decision = {"vs": a.compare, "metric": "arena-check-2 overall", "n": len(d), "d_points": dict(zip(sd_, d)),
+                    "mean_d": md, "se": se, "keep": keep, "worst_seed_drops_over_10": drops,
+                    "collapse_count": {"new": sum(r["collapse"] for r in rows), "kept": sum(r["collapse"] for r in kept.values())}}
+        L += ["", f"## Decision vs {a.compare} (pre-registered; arena-check-2 overall, paired by seed, n = {len(d)})", "",
+              "| Seed | " + " | ".join(str(i) for i in sd_) + " |", "|---|" + "---|" * len(sd_),
+              f"| {a.compare} overall % | " + " | ".join(pct(kept[i]["ac2"]) for i in sd_) + " |",
+              f"| {a.name} overall % | " + " | ".join(pct(new[i]["ac2"]) for i in sd_) + " |",
+              "| d (points) | " + " | ".join(f"{x:+.1f}" for x in d) + " |",
+              f"| {a.compare} kept try | " + " | ".join(str(kept[i]["kept_try"]) for i in sd_) + " |",
+              f"| {a.name} kept try | " + " | ".join(str(new[i]["kept_try"]) for i in sd_) + " |", "",
+              f"mean(d) = {md:+.2f} points, SE = {se:.2f}, 2*SE = {2 * se:.2f}. Collapse count: {a.name} "
+              f"{decision['collapse_count']['new']} of {len(rows)}, {a.compare} {decision['collapse_count']['kept']} of {len(kept)}.",
+              f"Worst-seed drops > 10 points: {', '.join(f'seed {i} ({x:+.1f})' for i, x in drops) if drops else 'none'}.", "",
+              f"**{'KEEP' if keep else 'DROP'} {a.name}** (rule: mean(d) >= 2*SE and >= 3 points). "
+              "No later rung is started automatically."]
     (P / "reports" / f"{a.name}-table.md").write_text("\n".join(L) + "\n")
-    (P / "logs" / f"{a.name}-table.json").write_text(json.dumps({"rows": rows, "summary": summ, "gate": gate}, indent=1))
+    (P / "logs" / f"{a.name}-table.json").write_text(json.dumps({"rows": rows, "summary": summ, "gate": gate, "decision": decision}, indent=1))
     print("\n".join(L))
 
 
