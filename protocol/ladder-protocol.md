@@ -68,7 +68,9 @@ The pilot finished 2026-11-26 00:08 (all 6 runs exit 0, no RAM-guard stop, drift
 **Gate:** if R0's mean over its 6 seeds on arena-check-2 **band 11–17** is **below 60%**, stop:
 no forward rung runs, and the owner gets a report.
 
-**Forward rungs:** each adds one change to the last **kept** config, starting from R0. A rung that
+**Forward rungs:** each adds one change to the last **kept** config, starting from R0. They run
+in this order: **F1, F2, F3, F5, F4**. F4, the wider pool, runs **last** (owner, 2026-11-26). The labels
+are kept as first written. A rung that
 is not kept is dropped, and the next rung is applied to the previous kept config.
 
 | Rung | One change | Note |
@@ -76,8 +78,8 @@ is not kept is dropped, and the next rung is applied to the previous kept config
 | F1 | `observation.version` 2 | |
 | F2 | `loop_stop` {repeats 3, penalty 0.5} + `loop_escape` true | **non-potential-based reward** (loop_stop penalty) |
 | F3 | `policy_epsilon` 0.1 | |
-| F4 | wider training pool: sizes [11,13,15,17,19,21], 600 / 120 / 120 (100 / 20 / 20 per size), same `maze_seed` | **Risk flag:** B-mixed-25 (sizes 11–25, same recipe family, patience 40) had 3 of 4 seeds keep a try-500–750 brain and stop at 10,500–10,750 (arena-check-2 15.8–39.0%, against 63.7% for its one good seed). F4 reports per-seed kept try and early stop next to the score. |
 | F5 | `train_step_limit_factor` 2 | Changes what is learned (training tries end at 2× the shortest path, scoring stays at 4×). It is a rung, not a speed setting. |
+| F4 | wider training pool: sizes [11,13,15,17,19,21], 600 / 120 / 120 (100 / 20 / 20 per size), same `maze_seed` | **Risk flag:** B-mixed-25 (sizes 11–25, same recipe family, patience 40) had 3 of 4 seeds keep a try-500–750 brain and stop at 10,500–10,750 (arena-check-2 15.8–39.0%, against 63.7% for its one good seed). F4 reports per-seed kept try and early stop next to the score. |
 
 - No config contains `dqn.imitation`, a teacher, demonstrations or copied routes.
 - A downward ablation of R0 (removing one part at a time) is optional and **not scheduled**.
@@ -122,10 +124,13 @@ is not kept is dropped, and the next rung is applied to the previous kept config
 
 - Pilot (closed): 4,000 episodes, 2 seeds per arm.
 - **Screening:** R0 and F1–F5 each at **15,000 tries × 6 paired seeds (1–6)**, on the narrow
-  pool (F4 and later use F4's pool if F4 is kept). That is one batch of 6 processes on the 6
+  pool (F4, which runs last, uses its own 11–21 pool). That is one batch of 6 processes on the 6
   physical cores. `patience` 40 may stop a seed early.
 - **Confirmation (finalists):** retrain **R0** and the **kept chain's final config** at 15,000 tries
-  × **8 paired seeds (1–8)** (`confirm-R0.json`, `confirm-chain.json`). Each config runs with
+  × **8 fresh paired seeds (7–14)** (`confirm-R0.json`, `confirm-chain.json`).
+  - **Why fresh seeds:** the same seed gives the same run (TRAINING.md L129), and seeds 1–6
+    selected the chain. Reusing them would only replay the screening.
+  - That makes 16 runs, never more than 6 at a time. Each config runs with
   `parallel` 3, and both run together, so 6 processes at once.
   - They train on the **narrow pool**. **Nothing trains on the wide 11–41 pool**, for confirmation
     or otherwise.
@@ -134,7 +139,7 @@ is not kept is dropped, and the next rung is applied to the previous kept config
 
 ## Seeds and pairing
 
-- Screening uses seeds 1–6, confirmation 1–8. Seed *i* uses the same `seed` and the same
+- Screening uses seeds 1–6, confirmation uses fresh seeds 7–14 (owner, 2026-11-26). Seed *i* uses the same `seed` and the same
   `maze_seed` (93,000,001), so configs on the same pool see the same practice/check/test mazes.
 - Never select on the best single seed. Each seed's own `seed-<n>/brain.onnx` is scored;
   `best-brain.onnx` (chosen by the trainer on validation) is never used for a decision.
@@ -160,7 +165,7 @@ flag when the gap exceeds 15 points).
 
 ## Decision rule (paired by seed; amended 2026-11-26)
 
-- **Screening (F1–F5):** the score is arena-check-2 **band 11–17**, the sizes the narrow pool
+- **Screening (F1, F2, F3, F5, F4):** the score is arena-check-2 **band 11–17**, the sizes the narrow pool
   trains on. n = 6.
 - **Confirmation:** the score is arena-check-2 **overall** (11–41, 400 mazes), comparing the
   chain's final config against R0. n = 8.
@@ -183,7 +188,7 @@ Nothing is picked by hand. `best-brain.onnx` (the best seed) is never used for a
 Every config records `sizes` exactly.
 
 - Ladder and confirmation configs use the narrow pool, [11,13,15,17].
-- F4 and later use [11,13,15,17,19,21] if F4 is kept.
+- F4 (last rung) uses [11,13,15,17,19,21]. If F4 is kept, the chain's confirmation does too, and R0's confirmation stays on [11,13,15,17]. Both are scored on arena-check-2 overall (owner, 2026-11-26).
 - The pilot used [11,13,15,17,21,25,31,41] (closed).
 - Evaluation always covers all arena-check-2 sizes, 11–41.
 

@@ -9,12 +9,12 @@ Owner restructure 2026-11-26 (pilot closed, before any ladder result):
        Gate: R0 mean arena-check-2 band 11-17 < 60% -> stop and report.
   Forward rungs, one change each, applied to the last KEPT config (R0 first):
        F1 observation.version 2      F2 loop_stop + loop_escape (NON-potential-based)
-       F3 policy_epsilon 0.1         F4 wider training pool, sizes [11..21] (B-mixed-25 risk)
-       F5 train_step_limit_factor 2
+       F3 policy_epsilon 0.1         F5 train_step_limit_factor 2
+       F4 wider training pool, sizes [11..21] (B-mixed-25 risk), run LAST (order F1 F2 F3 F5 F4)
   `--dropped` lists rungs the decision rule dropped; until results exist every rung is assumed
-  kept, so F2-F5 and the chain confirmation are drafts.
+  kept, so F2-F4 and the chain confirmation are drafts.
   Confirmation (finalists): R0 and the kept chain's final config, NARROW pool, 15,000 tries,
-  8 paired seeds (1-8), parallel 3 each (both configs together = 6 processes); decided on
+  8 FRESH paired seeds (7-14, never used in screening), parallel 3 each (both configs together = 6 processes); decided on
   arena-check-2 OVERALL. No config trains on the wide 11-41 pool.
 
 Pilot configs (configs/ladder/pilot/) are a closed record and are no longer written here.
@@ -31,7 +31,8 @@ NARROW = {"size": 11, "sizes": [11, 13, 15, 17], "maze_seed": 93000001,
           "train": 400, "validation": 80, "test": 80, "border_exit": True}
 WIDER = {"sizes": [11, 13, 15, 17, 19, 21], "train": 600, "validation": 120, "test": 120}  # F4: 100/20/20 per size
 EPISODES = 15000
-SCREEN_SEEDS, CONFIRM_SEEDS = list(range(1, 7)), list(range(1, 9))
+SCREEN_SEEDS = list(range(1, 7))
+CONFIRM_SEEDS = list(range(7, 15))  # FRESH seeds 7-14: seeds 1-6 selected the chain, and same seed = same run (TRAINING.md L129)
 
 
 def r0():
@@ -49,7 +50,7 @@ def f3(c): c["policy_epsilon"] = 0.1
 def f4(c): c["levels"]["generated"].update(copy.deepcopy(WIDER))
 def f5(c): c["train_step_limit_factor"] = 2
 
-RUNGS = [("F1", f1), ("F2", f2), ("F3", f3), ("F4", f4), ("F5", f5)]
+RUNGS = [("F1", f1), ("F2", f2), ("F3", f3), ("F5", f5), ("F4", f4)]  # owner 2026-11-26: F4 (wider pool) runs LAST
 
 
 def write(name, cfg):
@@ -62,7 +63,7 @@ def write(name, cfg):
 
 def confirm(cfg, name):
     c = copy.deepcopy(cfg)
-    c.update(name=name, seeds=CONFIRM_SEEDS, parallel=3)
+    c.update(name=name, seed=CONFIRM_SEEDS[0], seeds=CONFIRM_SEEDS, parallel=3)
     return c
 
 

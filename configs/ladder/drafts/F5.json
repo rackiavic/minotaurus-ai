@@ -8,14 +8,12 @@
         11,
         13,
         15,
-        17,
-        19,
-        21
+        17
       ],
       "maze_seed": 93000001,
-      "train": 600,
-      "validation": 120,
-      "test": 120,
+      "train": 400,
+      "validation": 80,
+      "test": 80,
       "border_exit": true
     }
   },

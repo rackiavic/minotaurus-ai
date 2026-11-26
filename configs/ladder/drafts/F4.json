@@ -58,5 +58,6 @@
     "penalty": 0.5
   },
   "loop_escape": true,
-  "policy_epsilon": 0.1
+  "policy_epsilon": 0.1,
+  "train_step_limit_factor": 2
 }
