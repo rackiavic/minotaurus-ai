@@ -16,6 +16,13 @@ rsync -a --itemize-changes \
   --exclude='/secrets/' --exclude='.venv/' --exclude='__pycache__/' \
   --exclude='/repo/.git/worktrees/' --exclude='/worktrees/*/.git' \
   "$P/" "$D/" > "$P/logs/mirror-last.txt"
+# D:'s worktrees keep their own index (in D:'s repo/.git/worktrees/, not mirrored). The files and
+# refs are now new, so refresh only the index to HEAD (mixed reset: it never changes working files).
+# Then both D: worktrees must be clean, or the mirror reports a failure.
+for w in fresh work; do
+  git -C "$D/worktrees/$w" reset -q
+  [[ -z $(git -C "$D/worktrees/$w" status --porcelain --untracked-files=no) ]] || { echo "D: worktree $w not clean after mirror"; exit 4; }
+done
 n=$(grep -c '^[<>c]' "$P/logs/mirror-last.txt" || true)
 git -C "$P/worktrees/work" push -q origin ladder-work
 echo "$(date -Iseconds) mirrored $n changed items to $D in $(( $(date +%s)-t0 )) s; pushed ladder-work $(git -C "$P/worktrees/work" rev-parse --short HEAD)" | tee -a "$LOG"
