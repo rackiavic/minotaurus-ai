@@ -1,16 +1,23 @@
-"""Write every ladder config from one place, so arms and rungs differ only where intended.
+"""Write every ladder config from one place, so rungs differ only where intended.
 
-  python3 make_configs.py [--dropped R2,R4] [--episodes 4000]
+  python3 make_configs.py [--dropped F2,F3]
 
-One track, "Documented" (owner decision 2026-11-25). Cumulative ladder, one change per rung:
-  R0 r3, eval_every default (250)   R1 shaping            R2 wall_mask      R3 border_exit
-  R4 novelty+revisit (NON-potential-based)                R5 policy_epsilon 0.1
-  R6 patience 40     R7 observation.version 2             R8 loop_stop+loop_escape (NON-potential-based)
-Each rung Rk is applied to the last KEPT config before it. `--dropped` lists rungs the decision
-rule dropped; until results exist, every rung is assumed kept and files are written as drafts.
-Screening configs use 4,000 episodes x 6 seeds (1-6); finalists use 15,000 x 8 seeds (`--episodes 15000`).
+Owner restructure 2026-11-26 (pilot closed, before any ladder result):
+  R0 = full documented recipe: r3 network/learning block + shaping + wall_mask + novelty 0.02 +
+       revisit 0.01 + border_exit + patience 40; NARROW pool sizes [11,13,15,17], size 11,
+       400/80/80, maze_seed 93,000,001; 15,000 tries; eval_every 250; 6 paired seeds (1-6).
+       Gate: R0 mean arena-check-2 band 11-17 < 60% -> stop and report.
+  Forward rungs, one change each, applied to the last KEPT config (R0 first):
+       F1 observation.version 2      F2 loop_stop + loop_escape (NON-potential-based)
+       F3 policy_epsilon 0.1         F4 wider training pool, sizes [11..21] (B-mixed-25 risk)
+       F5 train_step_limit_factor 2
+  `--dropped` lists rungs the decision rule dropped; until results exist every rung is assumed
+  kept, so F2-F5 and the chain confirmation are drafts.
+  Confirmation (finalists): R0 and the kept chain's final config, NARROW pool, 15,000 tries,
+  8 paired seeds (1-8), parallel 3 each (both configs together = 6 processes); decided on
+  arena-check-2 OVERALL. No config trains on the wide 11-41 pool.
 
-Pilot configs (arms A, B, C) are always written to configs/ladder/pilot/.
+Pilot configs (configs/ladder/pilot/) are a closed record and are no longer written here.
 Recipes come from data/examples/ in the PINNED worktree; only the network/learning block is taken.
 No config ever contains dqn.imitation.
 """
@@ -18,76 +25,64 @@ import argparse, copy, json
 from pathlib import Path
 
 EX = Path("/mnt/d/Minotaur/worktrees/fresh/data/examples")
-OUT = Path("/mnt/d/Minotaur/configs/ladder")
+OUT = Path("/mnt/d/Minotaur/configs/ladder/drafts")
 NOT_RECIPE = ("shaping", "shaping_on_bump", "novelty_bonus", "revisit_penalty", "imitation")
-SOURCES = {"dqn-brain": "dqn-brain.json", "r3": "dqn-mixed-learning-brain.json"}
-POOLS = {"size": 11, "sizes": [11, 13, 15, 17, 21, 25, 31, 41], "maze_seed": 93000001,
-         "train": 800, "validation": 160, "test": 160}
+NARROW = {"size": 11, "sizes": [11, 13, 15, 17], "maze_seed": 93000001,
+          "train": 400, "validation": 80, "test": 80, "border_exit": True}
+WIDER = {"sizes": [11, 13, 15, 17, 19, 21], "train": 600, "validation": 120, "test": 120}  # F4: 100/20/20 per size
+EPISODES = 15000
+SCREEN_SEEDS, CONFIRM_SEEDS = list(range(1, 7)), list(range(1, 9))
 
 
-def recipe(key):
-    dqn = json.loads((EX / SOURCES[key]).read_text())["dqn"]
-    return {k: v for k, v in dqn.items() if k not in NOT_RECIPE}
+def r0():
+    dqn = json.loads((EX / "dqn-mixed-learning-brain.json").read_text())["dqn"]
+    dqn = {k: v for k, v in dqn.items() if k not in NOT_RECIPE}
+    dqn.update(shaping=True, novelty_bonus=0.02, revisit_penalty=0.01)
+    return {"name": "R0", "method": "dqn", "levels": {"generated": copy.deepcopy(NARROW)},
+            "episodes": EPISODES, "eval_every": 250, "patience": 40, "wall_mask": True,
+            "seed": 1, "seeds": SCREEN_SEEDS, "parallel": len(SCREEN_SEEDS), "dqn": dqn}
 
 
-def base(name, key, episodes, seeds):
-    # eval_every left out on purpose: the documented default (250) applies.
-    return {"name": name, "method": "dqn", "levels": {"generated": copy.deepcopy(POOLS)},
-            "episodes": episodes, "seed": seeds[0], "seeds": seeds, "parallel": len(seeds),
-            "dqn": recipe(key)}
+def f1(c): c["observation"] = {"version": 2}
+def f2(c): c["loop_stop"] = {"repeats": 3, "penalty": 0.5}; c["loop_escape"] = True
+def f3(c): c["policy_epsilon"] = 0.1
+def f4(c): c["levels"]["generated"].update(copy.deepcopy(WIDER))
+def f5(c): c["train_step_limit_factor"] = 2
+
+RUNGS = [("F1", f1), ("F2", f2), ("F3", f3), ("F4", f4), ("F5", f5)]
 
 
-def r1(c): c["dqn"]["shaping"] = True
-def r2(c): c["wall_mask"] = True
-def r3_(c): c["levels"]["generated"]["border_exit"] = True
-def r4(c): c["dqn"].update(novelty_bonus=0.02, revisit_penalty=0.01)
-def r5(c): c["policy_epsilon"] = 0.1
-def r6(c): c["patience"] = 40
-def r7(c): c["observation"] = {"version": 2}
-def r8(c): c["loop_stop"] = {"repeats": 3, "penalty": 0.5}; c["loop_escape"] = True
-
-RUNGS = [("R1", r1), ("R2", r2), ("R3", r3_), ("R4", r4), ("R5", r5), ("R6", r6), ("R7", r7), ("R8", r8)]
-
-
-def write(path, cfg):
+def write(name, cfg):
     assert "imitation" not in json.dumps(cfg)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(cfg, indent=2) + "\n")
-    print(path.relative_to(OUT))
+    assert 41 not in cfg["levels"]["generated"]["sizes"], "no config trains on the wide pool"
+    OUT.mkdir(parents=True, exist_ok=True)
+    (OUT / f"{name}.json").write_text(json.dumps(cfg, indent=2) + "\n")
+    print(f"{name}.json")
+
+
+def confirm(cfg, name):
+    c = copy.deepcopy(cfg)
+    c.update(name=name, seeds=CONFIRM_SEEDS, parallel=3)
+    return c
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dropped", default="")
-    ap.add_argument("--episodes", type=int, default=4000)
     a = ap.parse_args()
     dropped = {x for x in a.dropped.split(",") if x}
+    assert dropped <= {n for n, _ in RUNGS}, f"unknown rung in --dropped: {dropped}"
 
-    # pilot (pre-registered): A dqn-brain as-is, B r3, C r3 + shaping
-    pa = base("pilot-dqn-brain", "dqn-brain", 4000, [1, 2])
-    pa["dqn"] = json.loads((EX / "dqn-brain.json").read_text())["dqn"]
-    write(OUT / "pilot" / "pilot-dqn-brain.json", pa)
-    write(OUT / "pilot" / "pilot-r3.json", base("pilot-r3", "r3", 4000, [1, 2]))
-    pc = base("pilot-r3-shaping", "r3", 4000, [1, 2]); pc["dqn"]["shaping"] = True
-    write(OUT / "pilot" / "pilot-r3-shaping.json", pc)
-
-    ep = a.episodes; tag = f"-{ep // 1000}k"
-    seeds = list(range(1, 7)) if ep == 4000 else list(range(1, 9))  # screening 6, finalists 8
-    kept = base(f"R0{tag}", "r3", ep, seeds)
-    write(OUT / "drafts" / f"R0{tag}.json", kept)
+    base = r0(); write("R0", base)
+    kept, chain = base, ["R0"]
     for name, change in RUNGS:
-        cand = copy.deepcopy(kept); cand["name"] = f"{name}{tag}"; change(cand)
-        write(OUT / "drafts" / f"{name}{tag}.json", cand)
+        cand = copy.deepcopy(kept); cand["name"] = name; change(cand)
+        write(name, cand)
         if name not in dropped:
-            kept = cand
-
-    # reference: B-mixed-s1 recipe verbatim, paired pools and seeds
-    ref = json.loads(Path("/home/rkhrk/minotaur-research/2026-11-25-head-to-head/release/B-mixed-s1-config.json").read_text())
-    for k in ("train_step_limit_factor", "stages"):
-        ref.pop(k, None)
-    ref.update(name="ref-b-mixed", seeds=list(range(1, 9)), parallel=8)
-    ref["levels"]["generated"] = dict(copy.deepcopy(POOLS), border_exit=True)
-    write(OUT / "drafts" / "ref-b-mixed.json", ref)
+            kept = cand; chain.append(name)
+    write("confirm-R0", confirm(base, "confirm-R0"))
+    write("confirm-chain", confirm(kept, "confirm-chain"))
+    print("kept chain:", " + ".join(chain))
 
 
 if __name__ == "__main__":
