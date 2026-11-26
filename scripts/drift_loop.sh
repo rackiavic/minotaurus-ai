@@ -2,8 +2,8 @@
 # Background drift guard during runs: every 30 min, log to logs/drift.log.
 # On CHANGED-RELEVANT: mark every manifest of a running/finished run STALE (adds a field; never kills
 # jobs, never pulls) and write logs/DRIFT-ALERT.txt for the human to see.
-# Start:  tmux new -d -s drift /mnt/d/Minotaur/scripts/drift_loop.sh
-P=/mnt/d/Minotaur
+# Start:  tmux new -d -s drift ~/Minotaur/scripts/drift_loop.sh
+P=${MINOTAUR_ROOT:-$HOME/Minotaur}; export MINOTAUR_ROOT=$P  # working root (ext4); D:\Minotaur is the mirror
 while true; do
   if ! out=$("$P/scripts/drift_check.sh" --log 2>&1); then
     if [[ $(head -1 <<<"$out") == CHANGED-RELEVANT ]]; then

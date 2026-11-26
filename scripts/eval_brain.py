@@ -1,7 +1,7 @@
 """Score one brain on arena-check-2, greedy. Port of minotaur-research/2026-11-25-head-to-head/scripts/score.py.
 
 Usage (run with the PINNED worktree's interpreter, isolated):
-  /mnt/d/Minotaur/worktrees/fresh/.venv/bin/python -I eval_brain.py NAME BRAIN_ONNX OUT_JSON
+  $MINOTAUR_ROOT/worktrees/fresh/.venv/bin/python -I eval_brain.py NAME BRAIN_ONNX OUT_JSON
 
 Same episode() as B-mixed-s1's scorer (player seed f"{digest}|{level.id}", epsilon 0, greedy, step limit
 of the level). Only change: MazeEnv gets the brain's obs_version (a v1 brain plays exactly as before).
@@ -13,7 +13,8 @@ import hashlib, json, os, sys, warnings
 from collections import Counter
 from pathlib import Path
 
-MAZES = Path("/mnt/d/Minotaur/protocol/arena-check-2-mazes.json")
+P = Path(os.environ.get("MINOTAUR_ROOT", Path.home() / "Minotaur"))  # working root (ext4); D:\Minotaur is the mirror
+MAZES = P / "protocol" / "arena-check-2-mazes.json"
 BANDS = {"11-17": (11, 13, 15, 17), "21-25": (21, 25), "31-41": (31, 41)}
 
 

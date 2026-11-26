@@ -7,5 +7,7 @@
   "pyproject_sha256": "c67e6515d806cb04ae20d984b90444fc3b4261da3f8e0d88202e97d50340d4d0",
   "baseline_reference_sha": "19f8696",
   "pinned_at": "2026-11-25T18:12:39+00:00",
-  "worktree": "/mnt/d/Minotaur/worktrees/fresh"
+  "worktree": "~/Minotaur/worktrees/fresh",
+  "mirror": "/mnt/d/Minotaur (D:\\Minotaur), synced by scripts/mirror_to_d.sh",
+  "root_moved": "2026-11-26: working root moved from /mnt/d/Minotaur to ~/Minotaur (owner; tooling lag on 9p); pin unchanged"
 }

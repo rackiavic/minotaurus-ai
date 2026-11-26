@@ -21,11 +21,12 @@ Pilot configs (configs/ladder/pilot/) are a closed record and are no longer writ
 Recipes come from data/examples/ in the PINNED worktree; only the network/learning block is taken.
 No config ever contains dqn.imitation.
 """
-import argparse, copy, json
+import argparse, copy, json, os
 from pathlib import Path
 
-EX = Path("/mnt/d/Minotaur/worktrees/fresh/data/examples")
-OUT = Path("/mnt/d/Minotaur/configs/ladder/drafts")
+P = Path(os.environ.get("MINOTAUR_ROOT", Path.home() / "Minotaur"))  # working root (ext4); D:\Minotaur is the mirror
+EX = P / "worktrees" / "fresh" / "data" / "examples"
+OUT = P / "configs" / "ladder" / "drafts"
 NOT_RECIPE = ("shaping", "shaping_on_bump", "novelty_bonus", "revisit_penalty", "imitation")
 NARROW = {"size": 11, "sizes": [11, 13, 15, 17], "maze_seed": 93000001,
           "train": 400, "validation": 80, "test": 80, "border_exit": True}

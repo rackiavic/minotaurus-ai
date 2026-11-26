@@ -3,6 +3,20 @@
 Frozen before any training run. No edits once any result exists; a change after that point is a
 new protocol file with a new name, and results under the old one stay labelled with it.
 
+- **Working root (owner, 2026-11-26): `~/Minotaur` (WSL ext4). `D:\Minotaur` is now the
+  mirror.** The reason is tooling lag on the 9p mount (git, uv and scans). Results are not
+  affected.
+  - Scripts take `MINOTAUR_ROOT`, default `~/Minotaur`.
+  - `scripts/mirror_to_d.sh` copies the root to D: after every run or batch and pushes
+    ladder-work. It never deletes on D: and never touches `D:\Minotaur\secrets\`. `secrets/` lives
+    on D: only; it is never copied to `~/Minotaur` and never goes into git.
+  - Checked before any ladder run, under `~/Minotaur`:
+    - same packages as the D: venv (`uv sync --frozen`, uv.lock unchanged);
+    - drift SAME;
+    - regression output identical to `logs/regress-dc888a7.json`;
+    - eval_brain reproduces B-mixed-s1 maze for maze (74.0%; bands 93.5 / 65.0 / 44.0);
+    - verify_bundles passes;
+    - `make_configs.py` writes byte-identical configs.
 - Pinned code: `protocol/pinned.json` (upstream `dc888a7`, TRAINING.md sha256 `48c140f9…`).
 - Every run comes from `worktrees/fresh` (detached at the pinned SHA) through `scripts/launch.sh`.
 - Drift guard: `scripts/drift_check.sh` runs before every step, before each batch, every 30 min

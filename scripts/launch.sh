@@ -4,7 +4,8 @@
 # Refuses to start if: drift is CHANGED-RELEVANT, worktree HEAD != pinned SHA, worktree dirty,
 # or TRAINING.md / uv.lock hashes differ from pinned.json.
 set -euo pipefail
-P=/mnt/d/Minotaur; WT=$P/worktrees/fresh; CFG=$(realpath "$1"); NAME=$(basename "$CFG" .json)
+P=${MINOTAUR_ROOT:-$HOME/Minotaur}; export MINOTAUR_ROOT=$P  # working root (ext4); D:\Minotaur is the mirror
+WT=$P/worktrees/fresh; CFG=$(realpath "$1"); NAME=$(basename "$CFG" .json)
 PIN=$P/protocol/pinned.json
 get(){ python3 -c "import json;print(json.load(open('$PIN'))['$1'])"; }
 
@@ -34,7 +35,8 @@ EOF
 
 cd "$WT"
 # Runs stay UNSIGNED: point the key at a path that never exists, so `train` cannot pick up a key
-# from ~/.config/minotaurus or D:\Minotaur\secrets even if one is made later.
+# from ~/.config/minotaurus or D:\Minotaur\secrets even if one is made later. $P/secrets is never
+# created (secrets/ lives on D: only), so this path never exists.
 export MINOTAURUS_SIGNING_KEY=$P/secrets/.no-key-runs-stay-unsigned
 [[ ! -e $MINOTAURUS_SIGNING_KEY ]] || { echo "unsigned-guard path exists: refusing"; exit 3; }
 set +e

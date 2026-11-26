@@ -1,8 +1,8 @@
 """Verify every bundle of a run and record it in the run manifest.
 
 Usage (pinned interpreter, isolated):
-  /mnt/d/Minotaur/worktrees/fresh/.venv/bin/python -I verify_bundles.py RUN_DIR [--expect-unsigned]
-  /mnt/d/Minotaur/worktrees/fresh/.venv/bin/python -I verify_bundles.py --bundle TAR ONNX [--expect-unsigned]
+  $MINOTAUR_ROOT/worktrees/fresh/.venv/bin/python -I verify_bundles.py RUN_DIR [--expect-unsigned]
+  $MINOTAUR_ROOT/worktrees/fresh/.venv/bin/python -I verify_bundles.py --bundle TAR ONNX [--expect-unsigned]
 
 Per bundle: the server's own read_bundle() checks pass; sha256(brain.onnx inside the tar) equals
 manifest.brain_id and the manifest's file entry; it equals sha256 of the seed's brain.onnx on disk

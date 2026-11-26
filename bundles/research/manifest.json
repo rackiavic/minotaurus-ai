@@ -4,7 +4,7 @@
   "source_run": "/mnt/d/minotaurus-ai/runs/B-mixed/20261124-165004/seed-1 (read-only; checkpoints left out)",
   "trained_at_sha": "f1dd6ea",
   "packed_with_pinned_sha": "dc888a7324025923455bf483f7100212bf077bca",
-  "bundle": "/mnt/d/Minotaur/bundles/research/B-mixed-s1.bundle.tar",
+  "bundle": "~/Minotaur/bundles/research/B-mixed-s1.bundle.tar",
   "bundle_sha256": "522294faece3903680fc0f9e7fd9b6a482daf9790d5a757a431405d13cb80e62",
   "onnx_sha256": "f3c23fdb547cb086b3ad8171552e3b6a89a5e233dc220b75e54551cb57c98e96",
   "signed": false,

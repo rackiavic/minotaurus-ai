@@ -1,19 +1,20 @@
 """Wall layouts shared between a config's practice/check/test pools and the frozen evaluation sets.
 
-  /mnt/d/Minotaur/worktrees/fresh/.venv/bin/python -I overlap_check.py CONFIG.json [...]
+  $MINOTAUR_ROOT/worktrees/fresh/.venv/bin/python -I overlap_check.py CONFIG.json [...]
 
 Evaluation sets: protocol/arena-check-2-mazes.json (400) and the final-test layouts
 (~/minotaur-research/2026-11-25-head-to-head/final-test-mazes.json, 200, read-only; only the wall
 layouts are read, never any score). Both are rebuilt from their ids with the pinned generator and
 compared with walls(), the same function the pools use. Exit 1 if any layout is shared.
 """
-import json, sys
+import json, os, sys
 from pathlib import Path
 from minotaurus.engine.generate import generated_level_from_id
 from minotaurus.engine.pools import walls
 from minotaurus.trainer.config import ConfigFile
 
-SETS = {"arena-check-2": Path("/mnt/d/Minotaur/protocol/arena-check-2-mazes.json"),
+P = Path(os.environ.get("MINOTAUR_ROOT", Path.home() / "Minotaur"))  # working root (ext4); D:\Minotaur is the mirror
+SETS = {"arena-check-2": P / "protocol" / "arena-check-2-mazes.json",
         "final-test": Path.home() / "minotaur-research/2026-11-25-head-to-head/final-test-mazes.json"}
 
 

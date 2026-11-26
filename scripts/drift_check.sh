@@ -4,7 +4,7 @@
 # Usage: drift_check.sh [--log]     (--log also appends a timestamped line to logs/drift.log)
 # Never pulls, never touches worktrees/fresh. Only `git fetch upstream` in repo/.
 set -euo pipefail
-P=/mnt/d/Minotaur
+P=${MINOTAUR_ROOT:-$HOME/Minotaur}; export MINOTAUR_ROOT=$P  # working root (ext4); D:\Minotaur is the mirror
 REPO=$P/repo
 PINNED=$(python3 -c "import json;print(json.load(open('$P/protocol/pinned.json'))['pinned_sha'])")
 PIN_TMD=$(python3 -c "import json;print(json.load(open('$P/protocol/pinned.json'))['training_md_sha256'])")

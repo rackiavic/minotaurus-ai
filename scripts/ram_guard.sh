@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # RAM guard: every 10 min append `free -m` to logs/ram.log. If available memory < 1024 MB, stop ONE
-# arm (pilot-c first, then pilot-b) with Ctrl-C (launch.sh then records end + exit code), note it
+# run (default pilot-c first, then pilot-b; or the pairs given as arguments) with Ctrl-C (launch.sh then records end + exit code), note it
 # in that run's manifest, and write logs/RAM-ALERT.txt. At most one arm is stopped per check.
-# Start: tmux new -d -s ramguard /mnt/d/Minotaur/scripts/ram_guard.sh
-P=/mnt/d/Minotaur
-ORDER=("pilot-c:pilot-r3-shaping" "pilot-b:pilot-r3")
+# Start: tmux new -d -s ramguard ~/Minotaur/scripts/ram_guard.sh
+P=${MINOTAUR_ROOT:-$HOME/Minotaur}; export MINOTAUR_ROOT=$P  # working root (ext4); D:\Minotaur is the mirror
+# Optional args: TMUX_SESSION:RUN_NAME pairs, in stop order (default: the pilot arms).
+#   e.g. ram_guard.sh r0:R0   (R0 is one run of 6 seeds: stopping it stops all 6)
+if (( $# )); then ORDER=("$@"); else ORDER=("pilot-c:pilot-r3-shaping" "pilot-b:pilot-r3"); fi
 while true; do
   NOW=$(date -Iseconds)
   { echo "== $NOW"; free -m; } >> "$P/logs/ram.log"
@@ -12,7 +14,7 @@ while true; do
   if (( AVAIL < 1024 )); then
     for pair in "${ORDER[@]}"; do
       S=${pair%%:*}; RUN=${pair#*:}
-      if tmux has-session -t "$S" 2>/dev/null && pgrep -f "configs/ladder/pilot/$RUN.json" >/dev/null; then
+      if tmux has-session -t "$S" 2>/dev/null && pgrep -f "/$RUN.json" >/dev/null; then
         tmux send-keys -t "$S" C-c
         python3 - "$P/runs/$RUN/manifest.json" "$NOW" "$AVAIL" <<'EOF'
 import json, sys
