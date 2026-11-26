@@ -129,6 +129,39 @@ SAME. All 6 bundles match. Table: `reports/R0-table.md`.
     the way to produce a final brain.
   - Recipes are compared on the **mean of paired seeds**, never on a best seed.
 
+## S1 result and owner amendment (2026-11-26, after S1, BEFORE any S2 result)
+
+**S1 result (unchanged, not reinterpreted).** S1 ran 2026-11-26 20:29–21:47 UTC (**1 h 18 min**),
+exit 0, unsigned, drift SAME, all 6 bundles matched. Table: `reports/S1-table.md`.
+
+- arena-check-2 overall: mean 61.0 (SD 1.9). 0 of 6 seeds collapsed.
+- Paired with R0 on seeds 1–6: d = −15.0, +7.3, +15.0, +14.8, +16.5, +13.0. mean(d) = **+8.58**,
+  SE = 4.90, 2·SE = **9.79**. Worst-seed flag: seed 1, −15.0.
+- **Verdict under the rule as written: DROP.** The S1 table and its verdict stay exactly as written.
+
+**Owner amendment (pre-registered before S2 runs). This is a DEPARTURE FROM THE RULE AS WRITTEN.**
+
+1. **S1 is the PROVISIONAL BASE** for S2 and every later rung, even though it is formally DROP.
+   - Reason, stated before any S2 result exists: R0 collapsed in 5 of 6 seeds (seed SD 11.4), so
+     comparisons against R0 are unreliable.
+   - S1 had 0 of 6 collapses and a seed SD of 1.9.
+   - Every report that uses S1 as a base carries the label **"provisional base, departure from
+     rule"**.
+2. **Obligation: re-test S1 against R0 at the confirmation stage.**
+   - Fresh paired seeds **7–12** (n = 6), configs `confirm-R0.json` (seeds 7–14, of which 7–12
+     pair) and `confirm-S1.json` (seeds 7–12).
+   - Same rule and metric: keep only if mean(d) ≥ 2·SE **and** mean(d) ≥ 3 points, on
+     arena-check-2 overall.
+   - **If S1 fails there**, it is reported as failed, and every later rung that was built on it is
+     revisited. Nothing is hidden or reframed.
+3. **S2 = S1 + `train_step_limit_factor` 2**, judged against **S1** on paired seeds 1–6, with the
+   same rule and metric (arena-check-2 overall).
+4. **F1–F4** stay cumulative on the retained base. Each is judged against the previous retained
+   config.
+   - A rung that is KEEP becomes the new base.
+   - A rung that is DROP is left out, and the next rung is applied to the previous retained config.
+   - The only exception to the rule as written is S1, above.
+
 ## Pilot (pre-registered; it decides the Rung 0 recipe and nothing else)
 
 - 6 runs at once (arms A, B, C × seeds 1, 2), 4,000 episodes. Same sizes, pools and `maze_seed` (93,000,001) as Rung 0.
@@ -172,7 +205,9 @@ SAME. All 6 bundles match. Table: `reports/R0-table.md`.
   × **8 fresh paired seeds (7–14)** (`confirm-R0.json`, `confirm-chain.json`).
   - **Why fresh seeds:** the same seed gives the same run (TRAINING.md L129), and seeds 1–6
     selected the chain. Reusing them would only replay the screening.
-  - That makes 16 runs, never more than 6 at a time. Each config runs with
+  - **Plus `confirm-S1.json`** (S1 on fresh seeds 7–12, `parallel` 3). It is the obligatory re-test of
+    the provisional base against confirm-R0's seeds 7–12 (owner, 2026-11-26).
+  - That makes 16 runs (22 with confirm-S1), never more than 6 at a time. Each config runs with
   `parallel` 3, and both run together, so 6 processes at once.
   - They train on the **narrow pool**. **Nothing trains on the wide 11–41 pool**, for confirmation
     or otherwise.
@@ -216,6 +251,9 @@ flag when the gap exceeds 15 points).
 - **Secondary (reported, never deciding):** per seed, the bands 11–17 / 21–25 / 31–41, the kept-at-try,
   the last try (patience stop) and the collapse warning; per rung, the collapse count.
 - The R0 gate stays as recorded (band 11–17 ≥ 60%, passed).
+- **Provisional base (owner, 2026-11-26, before S2):** S1 is formally DROP but is the base for S2
+  and later rungs, with a re-test against R0 on fresh seeds 7–12 at confirmation. See "S1 result and
+  owner amendment". This is a departure from the rule as written.
 
 d_i = new_i − kept_i over the n paired seeds actually used.
 SE = sd(d) / √n. The rule itself is unchanged.

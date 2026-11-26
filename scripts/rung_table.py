@@ -20,6 +20,8 @@ from pathlib import Path
 
 P = Path(os.environ.get("MINOTAUR_ROOT", Path.home() / "Minotaur"))
 GATE = 0.60
+# Owner amendment 2026-11-26 (before S2): S1 is formally DROP but is the provisional base for later rungs.
+PROVISIONAL = {"S1": "S1 is a PROVISIONAL BASE: formally DROP vs R0 (mean d +8.58 < 2*SE 9.79); departure from the rule as written; re-test vs R0 on fresh seeds 7-12 at confirmation is obligatory."}
 errors = []
 
 
@@ -119,6 +121,7 @@ def main():
               f"mean(d) = {md:+.2f} points, SE = {se:.2f}, 2*SE = {2 * se:.2f}. Collapse count: {a.name} "
               f"{decision['collapse_count']['new']} of {len(rows)}, {a.compare} {decision['collapse_count']['kept']} of {len(kept)}.",
               f"Worst-seed drops > 10 points: {', '.join(f'seed {i} ({x:+.1f})' for i, x in drops) if drops else 'none'}.", "",
+              *([f"**Label: provisional base, departure from rule.** {PROVISIONAL[a.compare]}", ""] if a.compare in PROVISIONAL else []),
               f"**{'KEEP' if keep else 'DROP'} {a.name}** (rule: mean(d) >= 2*SE and >= 3 points). "
               "No later rung is started automatically."]
     (P / "reports" / f"{a.name}-table.md").write_text("\n".join(L) + "\n")

@@ -14,6 +14,9 @@ Owner restructure 2026-11-26 (pilot closed, before any ladder result):
        F1 observation.version 2      F2 loop_stop + loop_escape (NON-potential-based)
        F3 policy_epsilon 0.1         F4 wider training pool, sizes [11..21] (B-mixed-25 risk), LAST
   Every rung is decided on arena-check-2 OVERALL (11-41), n = 6.
+  Owner amendment after S1 (before S2): S1 is formally DROP but is the PROVISIONAL BASE (departure
+  from the rule as written), so S1 is NOT passed to --dropped; S2 = S1 + factor 2. confirm-S1
+  (fresh seeds 7-12) is the obligatory re-test of S1 against confirm-R0 seeds 7-12.
   `--dropped` lists rungs the decision rule dropped; until results exist every rung is assumed
   kept, so S2-F4 and the chain confirmation are drafts.
   Confirmation (finalists): R0 and the kept chain's final config, NARROW pool, 15,000 tries,
@@ -87,6 +90,8 @@ def main():
         if name not in dropped:
             kept = cand; chain.append(name)
     write("confirm-R0", confirm(base, "confirm-R0"))
+    s1cfg = json.loads((OUT / "S1.json").read_text())
+    c = confirm(s1cfg, "confirm-S1"); c.update(seeds=CONFIRM_SEEDS[:6]); write("confirm-S1", c)
     write("confirm-chain", confirm(kept, "confirm-chain"))
     print("kept chain:", " + ".join(chain))
 
