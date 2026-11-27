@@ -17,6 +17,8 @@ Owner restructure 2026-11-26 (pilot closed, before any ladder result):
   Owner amendment after S1 (before S2): S1 is formally DROP but is the PROVISIONAL BASE (departure
   from the rule as written), so S1 is NOT passed to --dropped; S2 = S1 + factor 2. confirm-S1
   (fresh seeds 7-12) is the obligatory re-test of S1 against confirm-R0 seeds 7-12.
+  After S2 (DROP) and F1 (KEEP): run with --dropped S2. Owner reorder 2026-11-27 (before any F4 result):
+  remaining rungs F4 (sizes 11-21) NOW, then F2 (optional), then F3.
   `--dropped` lists rungs the decision rule dropped; until results exist every rung is assumed
   kept, so S2-F4 and the chain confirmation are drafts.
   Confirmation (finalists): R0 and the kept chain's final config, NARROW pool, 15,000 tries,
@@ -58,7 +60,7 @@ def f2(c): c["loop_stop"] = {"repeats": 3, "penalty": 0.5}; c["loop_escape"] = T
 def f3(c): c["policy_epsilon"] = 0.1
 def f4(c): c["levels"]["generated"].update(copy.deepcopy(WIDER))
 
-RUNGS = [("S1", s1), ("S2", s2), ("F1", f1), ("F2", f2), ("F3", f3), ("F4", f4)]  # owner 2026-11-26 after R0; F4 LAST
+RUNGS = [("S1", s1), ("S2", s2), ("F1", f1), ("F4", f4), ("F2", f2), ("F3", f3)]  # owner 2026-11-27 after F1: F4, then F2 (optional), then F3
 
 
 def write(name, cfg):

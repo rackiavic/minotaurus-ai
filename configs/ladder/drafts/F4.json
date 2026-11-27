@@ -52,11 +52,5 @@
   },
   "observation": {
     "version": 2
-  },
-  "loop_stop": {
-    "repeats": 3,
-    "penalty": 0.5
-  },
-  "loop_escape": true,
-  "policy_epsilon": 0.1
+  }
 }

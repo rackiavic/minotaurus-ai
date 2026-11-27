@@ -84,7 +84,8 @@ no forward rung runs, and the owner gets a report.
 
 **Forward rungs (owner, 2026-11-26, after R0 and before any rung result; supersedes the
 F1, F2, F3, F5, F4 order):** each rung adds one change to the last **kept** config, starting from R0.
-They run in this order: **S1, S2, F1, F2, F3, F4**, with F4 last. A rung that is not kept is
+They run in this order: **S1, S2, F1, F2, F3, F4**, with F4 last. *(Order of the remaining rungs changed after F1, before any F4/F2 result:
+**F4, then F2, then F3**. See "F1 result and reorder".)* A rung that is not kept is
 dropped, and the next rung is applied to the previous kept config. Every rung keeps 15,000 tries,
 `eval_every` 250, `patience` 40, 6 paired seeds (1–6), `maze_seed` 93,000,001 and the narrow pool
 (F4 excepted).
@@ -161,6 +162,38 @@ exit 0, unsigned, drift SAME, all 6 bundles matched. Table: `reports/S1-table.md
    - A rung that is KEEP becomes the new base.
    - A rung that is DROP is left out, and the next rung is applied to the previous retained config.
    - The only exception to the rule as written is S1, above.
+
+## F1 result and reorder (owner, 2026-11-27, after F1, BEFORE any F4, F2 or F3 result)
+
+**S2 result:** S2 ran 2026-11-26 22:10–23:10 UTC (1 h 0 min).
+- arena-check-2 overall: mean 54.2 (SD 2.5).
+- Against S1, paired on seeds 1–6: mean(d) = −6.79, SE = 1.64, so **DROP**. Worst-seed flag: seed 3,
+  −14.0. Band 31–41 fell from 21.8 to 11.8.
+- Table: `reports/S2-table.md`.
+
+**F1 result:** F1 = S1 + `observation.version` 2. It ran 2026-11-26 23:15 to 2026-11-27 00:21 UTC
+(**1 h 6 min**): exit 0, unsigned, drift SAME, all 6 bundles matched, and every brain takes 82
+inputs (`logs/inputs-F1.md`).
+- arena-check-2 overall: mean **74.8** (SD 1.3); worst seed 73.2, best 76.8. Bands: 11–17 94.5,
+  21–25 72.2, 31–41 **37.8**. Check mean 97.7. 0 of 6 seeds collapsed; kept at tries 7,000–13,250.
+- Against S1, paired on seeds 1–6: d = +15.2, +14.0, +12.7, +11.3, +15.5, +13.5. mean(d) =
+  **+13.71**, SE = 0.65, 2·SE = 1.30, so **KEEP**. No worst-seed flag.
+- Table: `reports/F1-table.md`.
+- **F1 is the retained base.** It is built on the provisional base S1, and the re-test of S1 against
+  R0 on fresh seeds 7–12 is still owed. Reports judged against F1 carry the provisional-base label
+  too.
+
+**Reorder of the remaining rungs** (stated before any of their results exist):
+- **F4 now**, then **F2**, then **F3**. Each is applied to the last retained config and judged
+  against it. Same rule and metric (arena-check-2 overall), paired seeds 1–6.
+- **Reason:** the remaining weakness is large mazes (band 31–41 = 37.8), and the training pool stops
+  at size 17. F4 widens it to [11..21].
+- **F4 = F1 + sizes [11,13,15,17,19,21] only.** The pool keeps 100 / 20 / 20 mazes per size (600 /
+  120 / 120), the same `maze_seed` and separate practice / check / test piles. The B-mixed-25 risk
+  flag stays.
+- **F2 (loop_stop + loop_escape) is optional.** It may be skipped if the friend does not confirm
+  loop_stop / loop_escape as official (friend question 1: reward status of loop_stop). Skipping it
+  is not a DROP; it is recorded as "not run".
 
 ## Pilot (pre-registered; it decides the Rung 0 recipe and nothing else)
 
