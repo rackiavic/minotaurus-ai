@@ -10,12 +10,14 @@
         15,
         17,
         19,
-        21
+        21,
+        23,
+        25
       ],
       "maze_seed": 93000001,
-      "train": 600,
-      "validation": 120,
-      "test": 120,
+      "train": 800,
+      "validation": 160,
+      "test": 160,
       "border_exit": true
     }
   },
@@ -55,10 +57,10 @@
   "observation": {
     "version": 2
   },
+  "policy_epsilon": 0.1,
   "loop_stop": {
     "repeats": 3,
     "penalty": 0.5
   },
-  "loop_escape": true,
-  "policy_epsilon": 0.1
+  "loop_escape": true
 }

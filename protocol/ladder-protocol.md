@@ -85,7 +85,8 @@ no forward rung runs, and the owner gets a report.
 **Forward rungs (owner, 2026-11-26, after R0 and before any rung result; supersedes the
 F1, F2, F3, F5, F4 order):** each rung adds one change to the last **kept** config, starting from R0.
 They run in this order: **S1, S2, F1, F2, F3, F4**, with F4 last. *(Order of the remaining rungs changed after F1, before any F4/F2 result:
-**F4, then F2, then F3**. See "F1 result and reorder".)* A rung that is not kept is
+**F4, then F2, then F3**. See "F1 result and reorder".)* *(Changed again after F4, before any F5 result:
+**F5, then F3, then F2**. See "F4 result and F5".)* A rung that is not kept is
 dropped, and the next rung is applied to the previous kept config. Every rung keeps 15,000 tries,
 `eval_every` 250, `patience` 40, 6 paired seeds (1–6), `maze_seed` 93,000,001 and the narrow pool
 (F4 excepted).
@@ -194,6 +195,33 @@ inputs (`logs/inputs-F1.md`).
 - **F2 (loop_stop + loop_escape) is optional.** It may be skipped if the friend does not confirm
   loop_stop / loop_escape as official (friend question 1: reward status of loop_stop). Skipping it
   is not a DROP; it is recorded as "not run".
+
+## F4 result and F5 (owner, 2026-11-27, after F4, BEFORE any F5, F3 or F2 result)
+
+**F4 result:** F4 = F1 + sizes [11,13,15,17,19,21]. It ran 2026-11-27 06:25–08:02 UTC (**1 h 37
+min**): exit 0, unsigned, drift SAME, all 6 bundles matched, and every brain takes 82 inputs.
+- arena-check-2 overall: mean **83.6** (SD 2.2); worst seed 80.2, best 86.0. Bands: 11–17 98.0,
+  21–25 83.0, 31–41 **55.3**. Check mean 97.4. 0 of 6 seeds collapsed.
+- Against F1, paired on seeds 1–6: d = +5.0, +12.7, +5.5, +12.7, +8.7, +8.3. mean(d) = **+8.83**,
+  SE = 1.38, 2·SE = 2.75, so **KEEP**. No worst-seed flag.
+- Table: `reports/F4-table.md`.
+- **F4 is the retained base** (R0 + S1 + F1 + F4). It is still built on the provisional base S1, and
+  the S1 re-test against R0 on fresh seeds 7–12 is still owed.
+- **Note:** band 31–41 (55.3) is the weakest. Most seeds kept a late brain: 5 of 6 at tries
+  10,750–14,000, and seed 6 at 7,000.
+
+**New rung F5** (stated before any of its results exist):
+- **F5 = F4 + sizes [11,13,15,17,19,21,23,25] only.** It keeps the per-size scheme of 100 / 20 / 20
+  (800 / 160 / 160), the same `maze_seed`, separate practice / check / test piles, and the default
+  `train_step_limit_factor` (4×).
+- It is judged against **F4** on paired seeds 1–6, with the same rule and metric (arena-check-2
+  overall).
+- **Label note:** "F5" once named the `train_step_limit_factor` 2 rung. That rung was renamed S2
+  before it ran, so no result exists under the old label F5.
+
+**Queue after F5:** F3 (`policy_epsilon` 0.1), then F2 (loop_stop + loop_escape). F2 is optional,
+pending the friend's confirmation that it counts as official. Each is applied to the last retained
+config and judged against it.
 
 ## Pilot (pre-registered; it decides the Rung 0 recipe and nothing else)
 

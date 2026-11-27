@@ -19,6 +19,7 @@ Owner restructure 2026-11-26 (pilot closed, before any ladder result):
   (fresh seeds 7-12) is the obligatory re-test of S1 against confirm-R0 seeds 7-12.
   After S2 (DROP) and F1 (KEEP): run with --dropped S2. Owner reorder 2026-11-27 (before any F4 result):
   remaining rungs F4 (sizes 11-21) NOW, then F2 (optional), then F3.
+  After F4 (KEEP), owner 2026-11-27: F5 = F4 + sizes 11-25 (800/160/160) NOW, then F3, then F2 (optional).
   `--dropped` lists rungs the decision rule dropped; until results exist every rung is assumed
   kept, so S2-F4 and the chain confirmation are drafts.
   Confirmation (finalists): R0 and the kept chain's final config, NARROW pool, 15,000 tries,
@@ -39,6 +40,7 @@ NOT_RECIPE = ("shaping", "shaping_on_bump", "novelty_bonus", "revisit_penalty", 
 NARROW = {"size": 11, "sizes": [11, 13, 15, 17], "maze_seed": 93000001,
           "train": 400, "validation": 80, "test": 80, "border_exit": True}
 WIDER = {"sizes": [11, 13, 15, 17, 19, 21], "train": 600, "validation": 120, "test": 120}  # F4: 100/20/20 per size
+WIDEST = {"sizes": [11, 13, 15, 17, 19, 21, 23, 25], "train": 800, "validation": 160, "test": 160}  # F5: 100/20/20 per size
 EPISODES = 15000
 SCREEN_SEEDS = list(range(1, 7))
 CONFIRM_SEEDS = list(range(7, 15))  # FRESH seeds 7-14: seeds 1-6 selected the chain, and same seed = same run (TRAINING.md L129)
@@ -59,8 +61,9 @@ def f1(c): c["observation"] = {"version": 2}
 def f2(c): c["loop_stop"] = {"repeats": 3, "penalty": 0.5}; c["loop_escape"] = True
 def f3(c): c["policy_epsilon"] = 0.1
 def f4(c): c["levels"]["generated"].update(copy.deepcopy(WIDER))
+def f5(c): c["levels"]["generated"].update(copy.deepcopy(WIDEST))  # owner 2026-11-27 after F4
 
-RUNGS = [("S1", s1), ("S2", s2), ("F1", f1), ("F4", f4), ("F2", f2), ("F3", f3)]  # owner 2026-11-27 after F1: F4, then F2 (optional), then F3
+RUNGS = [("S1", s1), ("S2", s2), ("F1", f1), ("F4", f4), ("F5", f5), ("F3", f3), ("F2", f2)]  # owner 2026-11-27 after F4: F5, then F3, then F2 (optional)
 
 
 def write(name, cfg):
