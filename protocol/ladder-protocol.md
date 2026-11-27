@@ -194,7 +194,8 @@ inputs (`logs/inputs-F1.md`).
   flag stays.
 - **F2 (loop_stop + loop_escape) is optional.** It may be skipped if the friend does not confirm
   loop_stop / loop_escape as official (friend question 1: reward status of loop_stop). Skipping it
-  is not a DROP; it is recorded as "not run".
+  is not a DROP; it is recorded as "not run". *(Superseded 2026-11-27, before any F3 or F2 result:
+  F2 is no longer pending the friend. See "Friend answers and F2 status".)*
 
 ## F4 result and F5 (owner, 2026-11-27, after F4, BEFORE any F5, F3 or F2 result)
 
@@ -221,7 +222,33 @@ min**): exit 0, unsigned, drift SAME, all 6 bundles matched, and every brain tak
 
 **Queue after F5:** F3 (`policy_epsilon` 0.1), then F2 (loop_stop + loop_escape). F2 is optional,
 pending the friend's confirmation that it counts as official. Each is applied to the last retained
-config and judged against it.
+config and judged against it. *(Amended 2026-11-27, before any F3 or F2 result:
+F2 is no longer pending the friend; whether it runs is the owner's decision. See "Friend answers and
+F2 status".)*
+
+## Friend answers and F2 status (owner, 2026-11-27, after F5, BEFORE any F3 or F2 result)
+
+The friend (upstream repo owner) answered four questions:
+
+1. **Tie rule:** TRAINING.md L247 ("on a tie the try with fewer loops wins, and after that the
+   earlier one") and L275 ("a tie keeps the later brain") disagree, and the docs need fixing. The
+   pinned code (`minotaurus/trainer/train.py:343–350`, tests `tests/test_loops.py:256–263`) does
+   this: a higher check score wins; on a tied score, fewer loops wins; on a full tie, the **later**
+   try is kept. Every rung ran on the same pinned code, so no recorded result changes. The docs fix
+   is a PR proposal only; the pin stays at `dc888a7`.
+2. **`loop_stop` and `loop_escape` are official** (documented settings, allowed under hard rule 2).
+   loop_stop's penalty is still a **non-potential-based reward**, labelled in every report.
+3. A **local verify command** (bundles and pool overlap in one command) is fine as a PR proposal.
+4. **Speed PRs** (`train_every`, preallocated replay buffer) are fine as proposals.
+
+**F2 status:**
+- F2 is **no longer pending the friend's confirmation**.
+- F2 **stays queued after F3**. The order is unchanged: F3, then F2.
+- F2 **does not start automatically**. After F3's result, the owner decides whether F2 runs. If
+  the owner decides not to run it, it is recorded as "not run (owner decision)", not as a DROP.
+- If it runs, it is applied to the last retained config and judged against it, with the same rule
+  and metric (arena-check-2 overall), on paired seeds 1–6.
+- Nothing else changes: no approved config, pin, pool, seed or rule is edited by this note.
 
 ## Pilot (pre-registered; it decides the Rung 0 recipe and nothing else)
 
