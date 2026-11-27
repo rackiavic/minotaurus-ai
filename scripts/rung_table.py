@@ -22,6 +22,9 @@ P = Path(os.environ.get("MINOTAUR_ROOT", Path.home() / "Minotaur"))
 GATE = 0.60
 # Owner amendment 2026-11-26 (before S2): S1 is formally DROP but is the provisional base for later rungs.
 PROVISIONAL = {"F1": "F1 is built on the PROVISIONAL BASE S1 (formally DROP vs R0; departure from the rule as written); the S1 re-test vs R0 on fresh seeds 7-12 is still owed.", "S1": "S1 is a PROVISIONAL BASE: formally DROP vs R0 (mean d +8.58 < 2*SE 9.79); departure from the rule as written; re-test vs R0 on fresh seeds 7-12 at confirmation is obligatory."}
+# Owner 2026-11-27 (label fix, verdicts unchanged): every later base is built on S1 as well.
+for _b in ("F4", "F5", "F6"):
+    PROVISIONAL[_b] = PROVISIONAL["F1"].replace("F1 is built", f"{_b} is built")
 errors = []
 
 

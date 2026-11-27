@@ -86,7 +86,8 @@ no forward rung runs, and the owner gets a report.
 F1, F2, F3, F5, F4 order):** each rung adds one change to the last **kept** config, starting from R0.
 They run in this order: **S1, S2, F1, F2, F3, F4**, with F4 last. *(Order of the remaining rungs changed after F1, before any F4/F2 result:
 **F4, then F2, then F3**. See "F1 result and reorder".)* *(Changed again after F4, before any F5 result:
-**F5, then F3, then F2**. See "F4 result and F5".)* A rung that is not kept is
+**F5, then F3, then F2**. See "F4 result and F5".)* *(Changed again after F5, before any F6 or F3 result:
+conditional chain **F6, then F3 on the retained base, then STOP**. See "F5 result and the conditional chain".)* A rung that is not kept is
 dropped, and the next rung is applied to the previous kept config. Every rung keeps 15,000 tries,
 `eval_every` 250, `patience` 40, 6 paired seeds (1–6), `maze_seed` 93,000,001 and the narrow pool
 (F4 excepted).
@@ -249,6 +250,63 @@ The friend (upstream repo owner) answered four questions:
 - If it runs, it is applied to the last retained config and judged against it, with the same rule
   and metric (arena-check-2 overall), on paired seeds 1–6.
 - Nothing else changes: no approved config, pin, pool, seed or rule is edited by this note.
+
+## F5 result and the conditional chain (owner, 2026-11-27, after F5, BEFORE any F6 or F3 result)
+
+**F5 result:** F5 = F4 + sizes [11,13,15,17,19,21,23,25]. It ran 2026-11-27 08:07–10:40 UTC (**2 h
+33 min**): exit 0, unsigned, drift SAME, all 6 bundles matched, and every brain takes 82 inputs.
+- arena-check-2 overall: mean **91.2** (SD 3.0); worst seed 88.0, best 96.8. Bands: 11–17 99.2,
+  21–25 92.3, 31–41 **74.2 (SD 8.4)**. Check mean 97.8. 0 of 6 seeds collapsed.
+- Against F4, paired on seeds 1–6: d = +16.5, +2.0, +8.5, +5.8, +7.5, +5.5. mean(d) = **+7.63**,
+  SE = 1.99, 2·SE = 3.99, so **KEEP**. No seed is worse than under F4.
+- **Seed 1 is an outlier** (+16.5). Without it, mean(d) is about **+5.9**. This is reported and does
+  not change the verdict.
+- Table: `reports/F5-table.md`. It was regenerated to add the label "provisional base, departure from
+  rule" (F4 is built on S1). The verdict and every number are unchanged; `logs/F5-table.json` is
+  byte-identical.
+- **F5 is the retained base.** It is still built on the provisional base S1, and the S1 re-test
+  against R0 on fresh seeds 7–12 is still owed.
+
+**Hardware note:** the WSL restart of 2026-11-27 activated `.wslconfig` (10 processors, 11 GB, 4 GB
+swap). Rungs still run 6 processes with one thread each, so results are unaffected; wall time may
+differ slightly.
+
+**Pre-registered conditional chain (approved by the owner; it runs unattended and then STOPS):**
+
+1. **F6 = F5 + sizes [11,13,15,…,31] only** (odd sizes; 100 / 20 / 20 per size, 1100 / 220 / 220;
+   same `maze_seed`, separate practice / check / test piles, default 4× step limit).
+   - Judged against **F5** on paired seeds 1–6, on arena-check-2 overall. The rule is unchanged:
+     KEEP only if mean(d) ≥ 2·SE **and** mean(d) ≥ 3 points.
+   - Overlap check: 0 shared layouts with arena-check-2 and 0 with final-test (all three piles).
+2. **F3 = the retained base + `policy_epsilon` 0.1 only**, judged against that base by the same rule
+   and metric.
+   - The retained base is **F6 if F6 is KEEP, otherwise F5**.
+   - Both variants are written before any result: `F3-on-F6.json` and `F3-on-F5.json`.
+   - Decisions follow the rule only; nothing is chosen by hand.
+3. **STOP after F3.** F2, the confirmation stage and the final test are **not** started. Each needs
+   a new owner decision.
+
+**Abort conditions.** On any of these the chain writes `logs/ALERT.txt`, starts nothing further and
+**never resumes by itself**:
+- any run failure (launch refused, exit code ≠ 0, or a post-rung step fails);
+- a RAM guard trip;
+- drift CHANGED-RELEVANT;
+- a collapse count **above 3 of 6 in F6**.
+
+**Mechanics:**
+- `scripts/chain.sh` runs inside tmux (session `chain`), not from a chat session.
+- Each rung goes through `launch.sh` in its own tmux session (`f6`, then `f3`), with the same
+  safeguards as before: pinned worktree, unsigned, drift check and RAM guard
+  (`ram_guard.sh f6:F6 f3:F3-on-F6 f3:F3-on-F5`).
+- `post_rung.sh NAME BASE` evaluates each rung and decides it (`rung_table.py --compare BASE`).
+  `chain.sh` then starts the F3 variant that the recorded decision selects.
+- After each rung the chain commits that rung's table to ladder-work, mirrors to D: and pushes
+  **ladder-work only**.
+- At the end it writes `reports/chain-summary.md`: both tables, the decisions, the retained base,
+  the time per rung, the minimum available memory and any flags.
+
+**During the chain:** no PRs, no merges, no pushes to the friend's repo (upstream), and no change to
+the pin (`dc888a7`).
 
 ## Pilot (pre-registered; it decides the Rung 0 recipe and nothing else)
 

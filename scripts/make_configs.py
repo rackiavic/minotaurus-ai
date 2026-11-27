@@ -20,6 +20,8 @@ Owner restructure 2026-11-26 (pilot closed, before any ladder result):
   After S2 (DROP) and F1 (KEEP): run with --dropped S2. Owner reorder 2026-11-27 (before any F4 result):
   remaining rungs F4 (sizes 11-21) NOW, then F2 (optional), then F3.
   After F4 (KEEP), owner 2026-11-27: F5 = F4 + sizes 11-25 (800/160/160) NOW, then F3, then F2 (optional).
+  After F5 (KEEP), owner 2026-11-27 conditional chain: F6 = F5 + sizes odd 11-31 (1100/220/220) vs F5,
+  then F3 (policy_epsilon 0.1) on the retained base (F6 if KEEP, else F5): F3-on-F6 / F3-on-F5. STOP.
   `--dropped` lists rungs the decision rule dropped; until results exist every rung is assumed
   kept, so S2-F4 and the chain confirmation are drafts.
   Confirmation (finalists): R0 and the kept chain's final config, NARROW pool, 15,000 tries,
@@ -41,6 +43,7 @@ NARROW = {"size": 11, "sizes": [11, 13, 15, 17], "maze_seed": 93000001,
           "train": 400, "validation": 80, "test": 80, "border_exit": True}
 WIDER = {"sizes": [11, 13, 15, 17, 19, 21], "train": 600, "validation": 120, "test": 120}  # F4: 100/20/20 per size
 WIDEST = {"sizes": [11, 13, 15, 17, 19, 21, 23, 25], "train": 800, "validation": 160, "test": 160}  # F5: 100/20/20 per size
+F6_POOL = {"sizes": list(range(11, 32, 2)), "train": 1100, "validation": 220, "test": 220}  # F6: odd 11-31, 100/20/20 per size
 EPISODES = 15000
 SCREEN_SEEDS = list(range(1, 7))
 CONFIRM_SEEDS = list(range(7, 15))  # FRESH seeds 7-14: seeds 1-6 selected the chain, and same seed = same run (TRAINING.md L129)
@@ -62,8 +65,12 @@ def f2(c): c["loop_stop"] = {"repeats": 3, "penalty": 0.5}; c["loop_escape"] = T
 def f3(c): c["policy_epsilon"] = 0.1
 def f4(c): c["levels"]["generated"].update(copy.deepcopy(WIDER))
 def f5(c): c["levels"]["generated"].update(copy.deepcopy(WIDEST))  # owner 2026-11-27 after F4
+def f6(c): c["levels"]["generated"].update(copy.deepcopy(F6_POOL))  # owner 2026-11-27 after F5 (conditional chain)
 
-RUNGS = [("S1", s1), ("S2", s2), ("F1", f1), ("F4", f4), ("F5", f5), ("F3", f3), ("F2", f2)]  # owner 2026-11-27 after F4: F5, then F3, then F2 (optional)
+RUNGS = [("S1", s1), ("S2", s2), ("F1", f1), ("F4", f4), ("F5", f5), ("F6", f6), ("F3", f3), ("F2", f2)]  # owner 2026-11-27 after F5: F6, then F3 on the retained base, STOP (F2 owner decision)
+# Conditional chain (owner 2026-11-27, before any F6 result): F3 is written on BOTH possible bases;
+# chain.sh launches F3-on-F6 if F6 is KEEP, else F3-on-F5.
+F3_VARIANTS = ("F5", "F6")
 
 
 def write(name, cfg):
@@ -94,6 +101,8 @@ def main():
         write(name, cand)
         if name not in dropped:
             kept = cand; chain.append(name)
+    for b in F3_VARIANTS:
+        c = json.loads((OUT / f"{b}.json").read_text()); c["name"] = f"F3-on-{b}"; f3(c); write(f"F3-on-{b}", c)
     write("confirm-R0", confirm(base, "confirm-R0"))
     s1cfg = json.loads((OUT / "S1.json").read_text())
     c = confirm(s1cfg, "confirm-S1"); c.update(seeds=CONFIRM_SEEDS[:6]); write("confirm-S1", c)
