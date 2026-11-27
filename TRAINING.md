@@ -245,7 +245,9 @@ flowchart TD
 `saved at` reads like `1250 of 3250`: the saved brain is the version from try 1250, out of the 3250
 tries the run did (fewer than `episodes` when the early stop ended it). It is the try with the best
 quiz (validation) score. On the same score the try with fewer loops wins, and on a full tie (same
-score, same loops) the later try wins.
+score, same loops) the later try wins. Choosing among seeds for `best-brain.onnx` is a separate
+rule: the highest quiz score in whole percent, then fewer loops, then the exact score, then fewer
+steps, then the lower seed (`pick_best` in `minotaurus/trainer/multi.py`).
 The `loops` column counts the quiz mazes the saved brain looped on. With made mazes, `path` is how the saved brain
 plays the test mazes (steps divided by the shortest route, 1.0 is perfect; `-` when it finished
 none). Without made mazes it is the last training window. The average steps are not in the table
