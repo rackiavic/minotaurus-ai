@@ -244,7 +244,8 @@ flowchart TD
 
 `saved at` reads like `1250 of 3250`: the saved brain is the version from try 1250, out of the 3250
 tries the run did (fewer than `episodes` when the early stop ended it). It is the try with the best
-quiz (validation) score; on a tie the try with fewer loops wins, and after that the earlier one.
+quiz (validation) score. On the same score the try with fewer loops wins, and on a full tie (same
+score, same loops) the later try wins.
 The `loops` column counts the quiz mazes the saved brain looped on. With made mazes, `path` is how the saved brain
 plays the test mazes (steps divided by the shortest route, 1.0 is perfect; `-` when it finished
 none). Without made mazes it is the last training window. The average steps are not in the table
@@ -272,7 +273,9 @@ practice and 0% on check and test), which is the reason for this feature.
 
 A brain can get worse late in training (a DQN can suddenly forget). With made mazes, training
 checks the brain on the check (validation) mazes every 250 tries and at the last try, and keeps
-the best one; a tie keeps the later brain. `minotaurus train` prints which try it kept, and
+the best one: a higher score wins, on the same score the brain with fewer loops wins, and on a full
+tie (same score, same loops) the later brain is kept (`minotaurus/trainer/train.py`, tested in
+`tests/test_loops.py`). `minotaurus train` prints which try it kept, and
 `metrics.jsonl` and the `.onnx` file record it. If no check finished a single maze, the final
 brain is kept and a warning is printed. `"eval_every": 100` checks more often; `"eval_every": 0`
 switches it off (the last brain is kept, as before).
